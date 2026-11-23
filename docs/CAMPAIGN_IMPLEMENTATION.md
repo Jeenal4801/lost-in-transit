@@ -35,3 +35,5 @@ Original nine Python tests plus original five parity scenarios remain. Add every
 - Desktop 1440×900 and mobile 390×844 inspected; map, mission console, hide-console controls and new-campaign reset exercised. Captures 09–13 show the two endings, map and mobile views.
 - Fixed a DOM-label root teardown race discovered during navigation. Spatial labels now own isolated roots, released outside the scene commit; fresh development navigation produced no console warnings or errors.
 - Both production targets compile. Frame rate has not been benchmarked on low-power devices. The 35 later canonical cases and four later ending categories remain explicitly unavailable.
+
+The Python-served production UI was also exercised through A01: 73/100 incident, 100/100 after restoring service C, p95 2680 ms, replay playback and return-to-live followed by case completion. Original sandbox entry remains available. GitHub Actions built and deployed commit `c4296ae` successfully; the public campaign HQ and 3D case controls were inspected after deployment.
