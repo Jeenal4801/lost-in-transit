@@ -1,0 +1,21 @@
+.venv/
+.python/
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+.pytest_cache/
+*.tsbuildinfo
+.DS_Store
+frontend/dist-pages/
+frontend/.test-build/
+frontend/tests/parity.json
+.env
+.env.*
+!.env.example
+*.log
+*.db
+*.sqlite*
+.coverage
+htmlcov/
+# Third-party screenshots are local study material, not licensed for redistribution.
+design/references/*.png
