@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { Airport } from "../.test-build/simulation.js";
+import { Airport } from "../.test-build/frontend/src/simulation.js";
 const fixtures = JSON.parse(
   fs.readFileSync(new URL("./parity.json", import.meta.url)),
 );

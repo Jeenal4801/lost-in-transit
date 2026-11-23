@@ -28,8 +28,14 @@ class Airport:
         self.baseline = None
         # A recorded traffic fixture, not an outcome fixture: 27 visits to gate C.
         self.manifest = [0, 1, 2] * 27 + [0, 1] * 9 + [0]
+        scenario = self.config.get('scenario', {})
         for i, gate in enumerate(self.manifest):
-            self.schedule(i * .12, 'create', i, gate)
+            if scenario.get('hotspot'):
+                gate = 0 if (i * 17 + scenario.get('seed', 0)) % 10 < 8 else 1 + i % 2
+            when = i * scenario.get('interval', .12)
+            if scenario.get('burst'):
+                when = (i // 20) * .45 + (i % 20) * .006
+            self.schedule(when, 'create', i, gate)
         self.record()
 
     def schedule(self, when, kind, rid, gate=None):
@@ -54,6 +60,8 @@ class Airport:
             self.schedule(self.time + .2, 'timeout', r['n'])
             return
         gate = r['preferred'] if r['preferred'] in eligible else eligible[r['n'] % len(eligible)]
+        if self.config.get('balance'):
+            gate = min(eligible, key=lambda i: (self.active[i] + len(self.queues[i]) + sum(q['status'] == 'routing' and q['gate'] == i for q in self.requests.values()), i))
         r.update(gate=gate, status='routing', stage_at=self.time)
         self.emit('SERVICE_SELECTED', r, gate=gate)
         self.schedule(self.time + .5, 'queue', r['n'], gate)
@@ -62,7 +70,10 @@ class Airport:
         self.active[gate] += 1
         r.update(status='processing', stage_at=self.time, started=self.time)
         self.emit('REQUEST_STARTED', r, gate=gate)
-        self.schedule(self.time + .6 + (r['n'] % 4) * .08, 'complete', r['n'], gate)
+        service = self.config.get('scenario', {}).get('service', [.6]*3)[gate]
+        if self.config.get('accelerated'):
+            service *= .35
+        self.schedule(self.time + service + (r['n'] % 4) * .08, 'complete', r['n'], gate)
 
     def process(self, kind, rid, gate):
         if kind == 'create':
@@ -84,7 +95,9 @@ class Airport:
             self.emit('TLS_ESTABLISHED', r)
             self.route(r)
         elif kind == 'queue':
-            if not self.config['online'][gate]:
+            scenario = self.config.get('scenario', {})
+            transient = scenario.get('transient') == gate and r['attempt'] == 0 and (rid * 17 + scenario.get('seed', 0)) % 5 == 0
+            if not self.config['online'][gate] or transient:
                 r.update(status='waiting', stage_at=self.time)
                 self.emit('CONNECTION_PENDING', r, gate=gate)
                 self.schedule(self.time + 2, 'timeout', rid, gate)
@@ -99,7 +112,11 @@ class Airport:
         elif kind == 'complete':
             self.active[gate] -= 1
             if self.config['online'][gate]:
-                self.finish(r, 'succeeded', 200)
+                if self.config.get('scenario', {}).get('header') == gate and not self.config.get('normalize_headers'):
+                    self.emit('HEADER_REJECTED', r, gate=gate)
+                    self.finish(r, 'http_error', 421)
+                else:
+                    self.finish(r, 'succeeded', 200)
             else:
                 self.schedule(self.time + 2, 'timeout', rid, gate)
                 r.update(status='waiting', stage_at=self.time)
@@ -169,7 +186,23 @@ class Airport:
             self.advance()
 
     def command(self, action, value=None):
-        if action == 'seek':
+        if action == 'configure':
+            if not isinstance(value, dict) or not all(isinstance(value.get(k), list) and len(value[k]) == 3 and all(isinstance(x, bool) for x in value[k]) for k in ('online', 'routing')):
+                raise ValueError('Invalid architecture')
+            if not 1 <= value.get('capacity', 0) <= 12 or not 0 <= value.get('queue_limit', -1) <= 40 or not 0 <= value.get('retries', -1) <= 3:
+                raise ValueError('Invalid architecture limits')
+            if any(type(value[k]) is not int for k in ('capacity', 'queue_limit', 'retries')):
+                raise ValueError('Architecture limits must be integers')
+            scenario = value.get('scenario', {})
+            if not isinstance(scenario, dict) or not isinstance(scenario.get('interval', .12), (int,float)) or not .001 <= scenario.get('interval', .12) <= 1:
+                raise ValueError('Invalid workload interval')
+            service = scenario.get('service', [.6]*3)
+            if not isinstance(service,list) or len(service)!=3 or any(not isinstance(v,(int,float)) or not .01 <= v <= 10 for v in service):
+                raise ValueError('Invalid service durations')
+            if type(scenario.get('seed',0)) is not int or any(k in scenario and (type(scenario[k]) is not int or scenario[k] not in range(3)) for k in ('header','transient')):
+                raise ValueError('Invalid workload seed or gate')
+            self.__init__(value)
+        elif action == 'seek':
             self.running = False
             self.replay_playing = False
             self.replaying = max(0, min(int(value), len(self.history) - 1))

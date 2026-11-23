@@ -3,6 +3,18 @@ import type { State, RequestRow, EventRow } from "./types";
 export type Config = State["config"] & {
   capacity: number;
   queue_limit: number;
+  balance?: boolean;
+  accelerated?: boolean;
+  normalize_headers?: boolean;
+  scenario?: {
+    interval?: number;
+    service?: number[];
+    seed?: number;
+    hotspot?: boolean;
+    burst?: boolean;
+    transient?: number;
+    header?: number;
+  };
 };
 type Row = RequestRow & { preferred: number; started?: number };
 type Snapshot = Omit<State, "frames" | "replay" | "replayPlaying" | "baseline">;
@@ -42,7 +54,15 @@ export class Airport {
       ...Array.from({ length: 9 }, () => [0, 1]).flat(),
       0,
     ];
-    manifest.forEach((g, i) => this.schedule(i * 0.12, "create", i, g));
+    const scenario = this.config.scenario ?? {};
+    manifest.forEach((g, i) => {
+      if (scenario.hotspot)
+        g = (i * 17 + (scenario.seed ?? 0)) % 10 < 8 ? 0 : 1 + (i % 2);
+      const when = scenario.burst
+        ? Math.floor(i / 20) * 0.45 + (i % 20) * 0.006
+        : i * (scenario.interval ?? 0.12);
+      this.schedule(when, "create", i, g);
+    });
     this.record();
   }
   schedule(t: number, k: string, r: number, g: number | null = null) {
@@ -77,9 +97,18 @@ export class Airport {
       this.schedule(this.time + 0.2, "timeout", r.n);
       return;
     }
-    const g = eligible.includes(r.preferred)
+    let g = eligible.includes(r.preferred)
       ? r.preferred
       : eligible[r.n % eligible.length];
+    if (this.config.balance) {
+      const load = (i: number) =>
+        this.active[i] +
+        this.queues[i].length +
+        [...this.requests.values()].filter(
+          (q) => q.status === "routing" && q.gate === i,
+        ).length;
+      g = [...eligible].sort((a, b) => load(a) - load(b) || a - b)[0];
+    }
     Object.assign(r, { gate: g, status: "routing", stage_at: this.time });
     this.emit("SERVICE_SELECTED", r, { gate: g });
     this.schedule(this.time + 0.5, "queue", r.n, g);
@@ -92,7 +121,9 @@ export class Airport {
       started: this.time,
     });
     this.emit("REQUEST_STARTED", r, { gate: g });
-    this.schedule(this.time + 0.6 + (r.n % 4) * 0.08, "complete", r.n, g);
+    let service = this.config.scenario?.service?.[g] ?? 0.6;
+    if (this.config.accelerated) service *= 0.35;
+    this.schedule(this.time + service + (r.n % 4) * 0.08, "complete", r.n, g);
   }
   process(k: string, id: number, gate: number | null) {
     const g = gate as number;
@@ -126,7 +157,12 @@ export class Airport {
       this.emit("TLS_ESTABLISHED", r);
       this.route(r);
     } else if (k === "queue") {
-      if (!this.config.online[g]) {
+      const scenario = this.config.scenario ?? {};
+      const transient =
+        scenario.transient === g &&
+        r.attempt === 0 &&
+        (id * 17 + (scenario.seed ?? 0)) % 5 === 0;
+      if (!this.config.online[g] || transient) {
         Object.assign(r, { status: "waiting", stage_at: this.time });
         this.emit("CONNECTION_PENDING", r, { gate: g });
         this.schedule(this.time + 2, "timeout", id, g);
@@ -138,8 +174,15 @@ export class Airport {
       } else this.finish(r, "http_error", 503);
     } else if (k === "complete") {
       this.active[g]--;
-      if (this.config.online[g]) this.finish(r, "succeeded", 200);
-      else {
+      if (this.config.online[g]) {
+        if (
+          this.config.scenario?.header === g &&
+          !this.config.normalize_headers
+        ) {
+          this.emit("HEADER_REJECTED", r, { gate: g });
+          this.finish(r, "http_error", 421);
+        } else this.finish(r, "succeeded", 200);
+      } else {
         this.schedule(this.time + 2, "timeout", id, g);
         Object.assign(r, { status: "waiting", stage_at: this.time });
       }
@@ -253,7 +296,57 @@ export class Airport {
     } else if (this.running) this.advance();
   }
   command(action: string, value?: unknown) {
-    if (action === "seek") {
+    if (action === "configure") {
+      const c = value as Config;
+      if (
+        !c ||
+        !["online", "routing"].every(
+          (k) =>
+            Array.isArray(c[k as "online"]) &&
+            c[k as "online"].length === 3 &&
+            c[k as "online"].every((x) => typeof x === "boolean"),
+        ) ||
+        !(
+          c.capacity >= 1 &&
+          c.capacity <= 12 &&
+          c.queue_limit >= 0 &&
+          c.queue_limit <= 40 &&
+          c.retries >= 0 &&
+          c.retries <= 3
+        )
+      )
+        throw Error("Invalid architecture");
+      if (![c.capacity, c.queue_limit, c.retries].every(Number.isInteger))
+        throw Error("Architecture limits must be integers");
+      const scenario = c.scenario ?? {};
+      if (
+        typeof scenario !== "object" ||
+        !(
+          typeof (scenario.interval ?? 0.12) === "number" &&
+          (scenario.interval ?? 0.12) >= 0.001 &&
+          (scenario.interval ?? 0.12) <= 1
+        )
+      )
+        throw Error("Invalid workload interval");
+      const service = scenario.service ?? [0.6, 0.6, 0.6];
+      if (
+        !Array.isArray(service) ||
+        service.length !== 3 ||
+        service.some(
+          (v) =>
+            typeof v !== "number" || v < 0.01 || v > 10 || !Number.isFinite(v),
+        )
+      )
+        throw Error("Invalid service durations");
+      if (
+        !Number.isInteger(scenario.seed ?? 0) ||
+        [scenario.header, scenario.transient].some(
+          (v) => v !== undefined && (!Number.isInteger(v) || v < 0 || v > 2),
+        )
+      )
+        throw Error("Invalid workload seed or gate");
+      Object.assign(this, new Airport(c));
+    } else if (action === "seek") {
       this.running = false;
       this.replay_playing = false;
       this.replaying = Math.max(

@@ -19,3 +19,4 @@ frontend/tests/parity.json
 htmlcov/
 # Third-party screenshots are local study material, not licensed for redistribution.
 design/references/*.png
+frontend/tests/campaign-parity.json

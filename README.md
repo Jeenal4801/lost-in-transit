@@ -6,7 +6,13 @@ An interactive distributed-systems mystery in an original miniature 3D airport. 
 
 **[Play in your browser](https://jeenal4801.github.io/lost-in-transit/)** · [Source](https://github.com/Jeenal4801/lost-in-transit)
 
-## Play the first case
+## Play the campaign
+
+Start at HQ, investigate a case, collect trace or distribution evidence, then stage an architecture and verify it under load. Close a case to save its measured outcomes and unlock the next routes. The map is pannable/zoomable, with exclusive specializations, paid remedial branch switching and two reachable endings. Completed progress survives refresh; interrupted tests restart. New Campaign clears progress, while Replay preserves it.
+
+**Playable:** A01–A04, B01–B03 and S01 (the separate slice convergence challenge). The other 35 canonical missions are labeled Future and cannot launch. See `docs/CAMPAIGN_IMPLEMENTATION.md` for precise guards, budgets and limitations.
+
+## Original sandbox
 
 Enter the airport and accept the short mission tutorial. Watch the incident, inspect a terminal or open **Departures** to trace a failed request. Restore service or change routing, then **Send verification batch**. The engine computes every outcome; there are multiple valid repairs.
 
@@ -36,7 +42,7 @@ npm run build:pages --prefix frontend
 python3 -m http.server 4173 --directory frontend/dist-pages
 ```
 
-Open http://localhost:4173. Python here only serves files for local preview; deployed visitors need no Python, account, API key or backend. The hosted runtime executes entirely in each browser tab. Refresh starts a fresh incident. Assets and fonts are bundled locally; there are no analytics or paid services.
+Open http://localhost:4173. Python here only serves files for local preview; deployed visitors need no Python, account, API key or backend. The hosted runtime executes entirely in each browser tab. Campaign history survives refresh in browser local storage; unfinished workloads restart. Assets and fonts are bundled locally; there are no analytics or paid services.
 
 ## Architecture and correctness
 
@@ -68,8 +74,8 @@ The repository's `pages.yml` workflow runs Python tests, generates conformance f
 
 ## Design and licensing
 
-See `docs/PRODUCT_VISION.md`, `docs/DESIGN_REFERENCES.md` and `docs/DESIGN_REVIEW.md`. The vision document describes longer-term ambitions, not a list of shipped features. Source code and original procedural assets are MIT licensed. See `docs/ASSETS.md` and bundled `THIRD_PARTY_NOTICES.txt` for dependency/font licensing. Third-party reference screenshots are local study material and excluded from Git and deployment.
+See `docs/PRODUCT_VISION.md`, `docs/DESIGN_REFERENCES.md` and `docs/DESIGN_REVIEW.md`. The vision document describes longer-term ambitions, not a list of shipped features. The campaign specifications in `docs/CAMPAIGN_GRAPH.md`, `docs/VISUAL_DIRECTION.md` and `docs/CODEX_PROMPT.md` are the current source of truth. Source code and original procedural assets are MIT licensed. See `docs/ASSETS.md` and bundled `THIRD_PARTY_NOTICES.txt` for dependency/font licensing. Third-party reference screenshots are local study material and excluded from Git and deployment.
 
 ## Current limits
 
-One complete mission; no saved runs, multiplayer, additional missions, sound or draggable connection editing. Circuit breakers open without half-open recovery probes; retries use per-attempt timeouts, not a global deadline. Replay retains snapshots in memory for the current 100-request batch. 60 FPS is a target, not a measured guarantee across devices. Local Python tests currently report an upstream Starlette/httpx deprecation warning.
+Eight playable campaign nodes and the preserved original sandbox; no multiplayer, sound or draggable connection editing. Later cache, integrity and regional simulation mechanics are not yet implemented. Circuit breakers open without half-open recovery probes; retries use per-attempt timeouts, not a global deadline. Replay retains snapshots in memory for the current 100-request batch. 60 FPS is a target, not a measured guarantee across devices. Local Python tests currently report an upstream Starlette/httpx deprecation warning.

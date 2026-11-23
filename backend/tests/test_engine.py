@@ -104,3 +104,53 @@ def test_step_consumes_exactly_one_scheduled_event_at_equal_timestamps():
     assert len(a.requests) == 2
     assert a.time == 0
     assert not a.running
+
+
+def test_campaign_scenarios_have_distinct_repairs_within_budget():
+    import json
+    from pathlib import Path
+    content = json.loads((Path(__file__).resolve().parents[2] / 'shared/campaign.json').read_text())
+    alternatives = {
+        'A01': dict(routing=[True, True, False], capacity=4),
+        'A02': dict(routing=[True, False, True], capacity=6),
+        'A03': dict(routing=[True, True, False], capacity=4),
+        'A04': dict(routing=[True, False, True], capacity=6),
+        'B01': dict(capacity=8, queue_limit=24, balance=True),
+        'B02': dict(capacity=10, queue_limit=24, balance=True),
+        'B03': dict(capacity=10, queue_limit=24, balance=True),
+        'S01': dict(capacity=8, queue_limit=24, balance=True, accelerated=True, retries=1, normalize_headers=True),
+    }
+    for m in content['missions']:
+        if not m['playable']:
+            continue
+        config = {**content['base_architecture'], **m['starting_architecture_delta'], 'scenario': m['workload'], **alternatives[m['id']]}
+        a = finish(Airport(config))
+        assert a.metrics()['succeeded'] == 100, m['id']
+        assert a.metrics()['p95'] <= m['completion_conditions']['p95'], m['id']
+        operating_cost = config['capacity'] * sum(config['routing']) + (8 if config.get('accelerated') else 0) + (2 if config.get('balance') else 0) + (2 if config.get('normalize_headers') else 0) + (config['queue_limit']+7)//8 + config['retries']*2
+        assert operating_cost <= m['completion_conditions']['max_cost'], m['id']
+
+
+def test_campaign_configure_and_reset_preserve_replay_isolation():
+    a = Airport()
+    config = dict(online=[True]*3, routing=[True]*3, capacity=4, queue_limit=12, retries=1, breaker=False,
+                  scenario=dict(interval=.03, service=[.6]*3, seed=43, transient=2))
+    a.command('configure', config)
+    finish(a)
+    assert any(e['kind'] == 'REQUEST_RETRIED' for e in a.events)
+    a.command('seek', 1)
+    historical = a.view()
+    a.command('live')
+    a.command('configure', config)
+    assert not a.running and not a.requests
+    assert historical['requests']
+
+
+def test_configure_rejects_malformed_workloads():
+    import pytest
+    a = Airport()
+    original = copy.deepcopy(a.config)
+    for patch in [dict(capacity=1.5), dict(scenario={'interval': -1}), dict(scenario={'service': [0, 1, 2]}), dict(scenario={'transient': 9})]:
+        with pytest.raises(ValueError):
+            a.command('configure', {**original, **patch})
+        assert a.config == original

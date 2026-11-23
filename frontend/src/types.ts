@@ -42,6 +42,9 @@ export type State = {
   events: EventRow[];
   metrics: Metrics;
   config: {
+    scenario?: unknown;
+    capacity?:number;
+    queue_limit?:number;
     online: boolean[];
     routing: boolean[];
     retries: number;

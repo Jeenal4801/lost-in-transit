@@ -1,0 +1,1344 @@
+{
+  "version": 1,
+  "base_architecture": {
+    "online": [
+      true,
+      true,
+      true
+    ],
+    "routing": [
+      true,
+      true,
+      true
+    ],
+    "capacity": 2,
+    "queue_limit": 8,
+    "retries": 0,
+    "breaker": false,
+    "balance": false,
+    "accelerated": false,
+    "normalize_headers": false
+  },
+  "missions": [
+    {
+      "id": "A01",
+      "act": 1,
+      "title": "Missing 27",
+      "playable": true,
+      "short_hook": "One hundred requests checked in, but only 73 arrived. Reconstruct a missing journey and restore reliable delivery.",
+      "prerequisites": [],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": null,
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          false
+        ]
+      },
+      "workload_seed": 27,
+      "workload": {
+        "count": 100,
+        "interval": 0.12,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 27,
+        "offline": 2
+      },
+      "hidden_fault_model": {
+        "interval": 0.12,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 27,
+        "offline": 2
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 4000,
+        "max_cost": 12,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "A timeout is absence of an HTTP response. Restoring the service or excluding its route both recover delivery, but change the capacity available to the next workload.",
+      "replay_variants": [
+        27
+      ]
+    },
+    {
+      "id": "A02",
+      "act": 1,
+      "title": "Slow Arrivals",
+      "playable": true,
+      "short_hook": "The board is green, yet passengers are missing their connections. Keep every request below the latency objective without an unlimited infrastructure bill.",
+      "prerequisites": [
+        "A01"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": null,
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 31,
+      "workload": {
+        "count": 100,
+        "interval": 0.08,
+        "service": [
+          0.6,
+          2.8,
+          0.6
+        ],
+        "seed": 31
+      },
+      "hidden_fault_model": {
+        "interval": 0.08,
+        "service": [
+          0.6,
+          2.8,
+          0.6
+        ],
+        "seed": 31
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 2300,
+        "max_cost": 24,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "Tail latency includes both queueing and service time. Faster workers or bypassing the slow service solve different parts of the delay; added capacity alone cannot eliminate slow processing.",
+      "replay_variants": [
+        31
+      ]
+    },
+    {
+      "id": "A03",
+      "act": 1,
+      "title": "Unreliable Connection",
+      "playable": true,
+      "short_hook": "Identical requests take different journeys through the same terminal. Make delivery reliable without amplifying traffic beyond the retry budget.",
+      "prerequisites": [
+        "A02"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": "contact",
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 43,
+      "workload": {
+        "count": 100,
+        "interval": 0.08,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 43,
+        "transient": 2
+      },
+      "hidden_fault_model": {
+        "interval": 0.08,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 43,
+        "transient": 2
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 4800,
+        "max_cost": 26,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "Transient connection loss can be recovered by a bounded retry or avoided with routing. The retry adds traffic and deadline consumption; that policy carries into the next surge.",
+      "replay_variants": [
+        43
+      ]
+    },
+    {
+      "id": "A04",
+      "act": 1,
+      "title": "Mystery Header",
+      "playable": true,
+      "short_hook": "Some luggage clears security but is rejected at its destination. Compare response traces and restore valid delivery.",
+      "prerequisites": [
+        "A02"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": "contact",
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 59,
+      "workload": {
+        "count": 100,
+        "interval": 0.08,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 59,
+        "header": 1
+      },
+      "hidden_fault_model": {
+        "interval": 0.08,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 59,
+        "header": 1
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 2600,
+        "max_cost": 26,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "An HTTP 421 rejection is a response, unlike a transport timeout. Header normalization preserves all routes; excluding that service sacrifices usable throughput.",
+      "replay_variants": [
+        59
+      ]
+    },
+    {
+      "id": "B01",
+      "act": 2,
+      "title": "Morning Surge",
+      "playable": true,
+      "short_hook": "The morning timetable has compressed into a narrow arrival window. Absorb the surge without losing luggage or exhausting operating funds.",
+      "prerequisites": [
+        "A03",
+        "A04"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": null,
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 61,
+      "workload": {
+        "count": 100,
+        "interval": 0.025,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 61
+      },
+      "hidden_fault_model": {
+        "interval": 0.025,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 61
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 3200,
+        "max_cost": 32,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "A surge is a throughput problem. Worker capacity and processing speed reduce queue growth, while larger queues only move failure from rejection toward latency.",
+      "replay_variants": [
+        61
+      ]
+    },
+    {
+      "id": "B02",
+      "act": 2,
+      "title": "Queue Cliff",
+      "playable": true,
+      "short_hook": "A compressed arrival wave leaves luggage waiting on the belts. Balance buffer space and worker throughput against the latency target.",
+      "prerequisites": [
+        "B01"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": "pressure",
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 73,
+      "workload": {
+        "count": 100,
+        "interval": 0.018,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 73,
+        "burst": true
+      },
+      "hidden_fault_model": {
+        "interval": 0.018,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 73,
+        "burst": true
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 4000,
+        "max_cost": 36,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "Buffers absorb short bursts but do not create processing capacity. A successful design must bound both lost requests and the waiting time of the last arrivals.",
+      "replay_variants": [
+        73
+      ]
+    },
+    {
+      "id": "B03",
+      "act": 2,
+      "title": "Load Balancer Blindspot",
+      "playable": true,
+      "short_hook": "The same fleet now serves a very different passenger mix. Distribute the work before one terminal becomes the whole airport.",
+      "prerequisites": [
+        "B01"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": "pressure",
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 89,
+      "workload": {
+        "count": 100,
+        "interval": 0.03,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 89,
+        "hotspot": true
+      },
+      "hidden_fault_model": {
+        "interval": 0.03,
+        "service": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "seed": 89,
+        "hotspot": true
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 3200,
+        "max_cost": 36,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "Affinity concentrates traffic even when other workers are idle. Least-loaded routing counts in-flight assignments; worker expansion is a more expensive alternative.",
+      "replay_variants": [
+        89
+      ]
+    },
+    {
+      "id": "B04",
+      "act": 2,
+      "title": "Stalled Workers",
+      "playable": false
+    },
+    {
+      "id": "B05",
+      "act": 2,
+      "title": "Rate-Limit Dilemma",
+      "playable": false
+    },
+    {
+      "id": "B06",
+      "act": 2,
+      "title": "Tail Latency",
+      "playable": false
+    },
+    {
+      "id": "C01",
+      "act": 3,
+      "title": "Retry Storm",
+      "playable": false
+    },
+    {
+      "id": "C02",
+      "act": 3,
+      "title": "Duplicate Booking",
+      "playable": false
+    },
+    {
+      "id": "C03",
+      "act": 3,
+      "title": "Circuit Breaker",
+      "playable": false
+    },
+    {
+      "id": "C04",
+      "act": 3,
+      "title": "Deadline Propagation",
+      "playable": false
+    },
+    {
+      "id": "C05",
+      "act": 3,
+      "title": "Poison Message",
+      "playable": false
+    },
+    {
+      "id": "D01",
+      "act": 4,
+      "title": "Hot Cache",
+      "playable": false
+    },
+    {
+      "id": "D02",
+      "act": 4,
+      "title": "Cache Stampede",
+      "playable": false
+    },
+    {
+      "id": "D03",
+      "act": 4,
+      "title": "Stale Departure Board",
+      "playable": false
+    },
+    {
+      "id": "D04",
+      "act": 4,
+      "title": "Database Hotspot",
+      "playable": false
+    },
+    {
+      "id": "D05",
+      "act": 4,
+      "title": "Shard Rebalance",
+      "playable": false
+    },
+    {
+      "id": "D06",
+      "act": 4,
+      "title": "Consistency Budget",
+      "playable": false
+    },
+    {
+      "id": "E01",
+      "act": 5,
+      "title": "Hidden Dependency",
+      "playable": false
+    },
+    {
+      "id": "E02",
+      "act": 5,
+      "title": "Backpressure",
+      "playable": false
+    },
+    {
+      "id": "E03",
+      "act": 5,
+      "title": "Dead Letter Office",
+      "playable": false
+    },
+    {
+      "id": "E04",
+      "act": 5,
+      "title": "Partial Commit",
+      "playable": false
+    },
+    {
+      "id": "E05",
+      "act": 5,
+      "title": "Thundering Herd",
+      "playable": false
+    },
+    {
+      "id": "F01",
+      "act": 6,
+      "title": "Regional Failover",
+      "playable": false
+    },
+    {
+      "id": "F02",
+      "act": 6,
+      "title": "Replica Lag",
+      "playable": false
+    },
+    {
+      "id": "F03",
+      "act": 6,
+      "title": "Split Brain",
+      "playable": false
+    },
+    {
+      "id": "F04",
+      "act": 6,
+      "title": "DNS Failover Delay",
+      "playable": false
+    },
+    {
+      "id": "F05",
+      "act": 6,
+      "title": "Global Queue",
+      "playable": false
+    },
+    {
+      "id": "F06",
+      "act": 6,
+      "title": "Data Residency",
+      "playable": false
+    },
+    {
+      "id": "G01",
+      "act": 7,
+      "title": "Silent Alarm",
+      "playable": false
+    },
+    {
+      "id": "G02",
+      "act": 7,
+      "title": "Cascading Outage",
+      "playable": false
+    },
+    {
+      "id": "G03",
+      "act": 7,
+      "title": "Recovery Order",
+      "playable": false
+    },
+    {
+      "id": "G04",
+      "act": 7,
+      "title": "Incident Command",
+      "playable": false
+    },
+    {
+      "id": "H01",
+      "act": 8,
+      "title": "Peak Demand",
+      "playable": false
+    },
+    {
+      "id": "H02",
+      "act": 8,
+      "title": "Dependency Collapse",
+      "playable": false
+    },
+    {
+      "id": "H03",
+      "act": 8,
+      "title": "Recovery Under Budget",
+      "playable": false
+    },
+    {
+      "id": "H04",
+      "act": 8,
+      "title": "Integrity Audit",
+      "playable": false
+    },
+    {
+      "id": "H05",
+      "act": 8,
+      "title": "Dark Launch",
+      "playable": false
+    },
+    {
+      "id": "H06",
+      "act": 8,
+      "title": "Final Reckoning",
+      "playable": false
+    },
+    {
+      "id": "S01",
+      "act": 9,
+      "title": "Convergence / Flight Test",
+      "playable": true,
+      "short_hook": "Your inherited architecture faces a mixed surge and intermittent connections. Prove that the system can meet its objectives within the operating ceiling.",
+      "prerequisites": [
+        "B02",
+        "B03"
+      ],
+      "unlock_guards": [
+        "any prerequisite completed",
+        "exclusive branch selection permits entry"
+      ],
+      "exclusive_group": null,
+      "starting_architecture_delta": {
+        "online": [
+          true,
+          true,
+          true
+        ]
+      },
+      "workload_seed": 101,
+      "workload": {
+        "count": 100,
+        "interval": 0.03,
+        "service": [
+          0.9,
+          1.1,
+          0.8
+        ],
+        "seed": 101,
+        "hotspot": true,
+        "transient": 2
+      },
+      "hidden_fault_model": {
+        "interval": 0.03,
+        "service": [
+          0.9,
+          1.1,
+          0.8
+        ],
+        "seed": 101,
+        "hotspot": true,
+        "transient": 2
+      },
+      "initial_observables": [
+        "arrival count",
+        "p95 end-to-end latency",
+        "queue depth"
+      ],
+      "discoverable_evidence": [
+        "per-gate processing duration",
+        "per-request ordered trace",
+        "response code distribution",
+        "queue pressure"
+      ],
+      "diagnostic_actions": [
+        "inspect terminal",
+        "trace request",
+        "sample completed workload"
+      ],
+      "interventions": [
+        "change enabled routes",
+        "adjust capacity",
+        "adjust queue limit",
+        "adjust retries",
+        "least-loaded routing",
+        "accelerate service",
+        "normalize headers"
+      ],
+      "simulator_assertions": [
+        "request conservation",
+        "deterministic ordered events",
+        "bounded retry count"
+      ],
+      "completion_conditions": {
+        "arrivals": 100,
+        "p95": 4500,
+        "max_cost": 42,
+        "evidence": 1
+      },
+      "failure_conditions": [
+        "any objective missed; experiments may be repeated"
+      ],
+      "persistent_consequences": [
+        "worker capacity",
+        "routing policy",
+        "queue limit",
+        "retry policy",
+        "operating cost",
+        "recorded evidence",
+        "branch choice"
+      ],
+      "skills_tested": [
+        "trace analysis",
+        "controlled experiments",
+        "capacity planning"
+      ],
+      "debrief": "The final workload combines traffic skew, service-time variation and transient connections. Your ending reflects verified arrivals, tail latency and the operating cost of the architecture you carried here.",
+      "replay_variants": [
+        101
+      ]
+    }
+  ],
+  "endings": [
+    {
+      "id": "precision",
+      "title": "The Precision Network",
+      "playable": true
+    },
+    {
+      "id": "headroom",
+      "title": "Built for Headroom",
+      "playable": true
+    },
+    {
+      "id": "integrity",
+      "title": "Custodian of Truth",
+      "playable": false
+    },
+    {
+      "id": "global",
+      "title": "Across Every Border",
+      "playable": false
+    },
+    {
+      "id": "recovery",
+      "title": "Against the Blackout",
+      "playable": false
+    },
+    {
+      "id": "reckoning",
+      "title": "The Final Reckoning",
+      "playable": false
+    }
+  ],
+  "edges": [
+    {
+      "from": "A01",
+      "to": "A02",
+      "optional": false
+    },
+    {
+      "from": "A02",
+      "to": "A03",
+      "optional": false
+    },
+    {
+      "from": "A02",
+      "to": "A04",
+      "optional": false
+    },
+    {
+      "from": "B01",
+      "to": "B02",
+      "optional": false
+    },
+    {
+      "from": "B02",
+      "to": "B04",
+      "optional": false
+    },
+    {
+      "from": "B04",
+      "to": "B06",
+      "optional": false
+    },
+    {
+      "from": "B01",
+      "to": "B03",
+      "optional": false
+    },
+    {
+      "from": "B03",
+      "to": "B05",
+      "optional": false
+    },
+    {
+      "from": "B05",
+      "to": "B06",
+      "optional": false
+    },
+    {
+      "from": "C01",
+      "to": "C02",
+      "optional": false
+    },
+    {
+      "from": "C02",
+      "to": "C04",
+      "optional": false
+    },
+    {
+      "from": "C01",
+      "to": "C03",
+      "optional": false
+    },
+    {
+      "from": "C03",
+      "to": "C04",
+      "optional": false
+    },
+    {
+      "from": "C03",
+      "to": "C05",
+      "optional": false
+    },
+    {
+      "from": "D01",
+      "to": "D02",
+      "optional": false
+    },
+    {
+      "from": "D02",
+      "to": "D03",
+      "optional": false
+    },
+    {
+      "from": "D03",
+      "to": "D06",
+      "optional": false
+    },
+    {
+      "from": "D01",
+      "to": "D04",
+      "optional": false
+    },
+    {
+      "from": "D04",
+      "to": "D05",
+      "optional": false
+    },
+    {
+      "from": "D05",
+      "to": "D06",
+      "optional": false
+    },
+    {
+      "from": "E01",
+      "to": "E02",
+      "optional": false
+    },
+    {
+      "from": "E02",
+      "to": "E03",
+      "optional": false
+    },
+    {
+      "from": "E01",
+      "to": "E04",
+      "optional": false
+    },
+    {
+      "from": "E04",
+      "to": "E05",
+      "optional": false
+    },
+    {
+      "from": "F01",
+      "to": "F02",
+      "optional": false
+    },
+    {
+      "from": "F02",
+      "to": "F03",
+      "optional": false
+    },
+    {
+      "from": "F01",
+      "to": "F04",
+      "optional": false
+    },
+    {
+      "from": "F04",
+      "to": "F05",
+      "optional": false
+    },
+    {
+      "from": "F03",
+      "to": "F06",
+      "optional": false
+    },
+    {
+      "from": "F05",
+      "to": "F06",
+      "optional": false
+    },
+    {
+      "from": "G01",
+      "to": "G02",
+      "optional": false
+    },
+    {
+      "from": "G02",
+      "to": "G03",
+      "optional": false
+    },
+    {
+      "from": "G03",
+      "to": "G04",
+      "optional": false
+    },
+    {
+      "from": "H01",
+      "to": "H02",
+      "optional": false
+    },
+    {
+      "from": "H02",
+      "to": "H03",
+      "optional": false
+    },
+    {
+      "from": "H03",
+      "to": "H06",
+      "optional": false
+    },
+    {
+      "from": "H01",
+      "to": "H04",
+      "optional": false
+    },
+    {
+      "from": "H04",
+      "to": "H05",
+      "optional": false
+    },
+    {
+      "from": "H05",
+      "to": "H06",
+      "optional": false
+    },
+    {
+      "from": "A03",
+      "to": "B01",
+      "optional": false
+    },
+    {
+      "from": "A04",
+      "to": "B01",
+      "optional": false
+    },
+    {
+      "from": "B06",
+      "to": "C01",
+      "optional": false
+    },
+    {
+      "from": "C04",
+      "to": "D01",
+      "optional": false
+    },
+    {
+      "from": "C05",
+      "to": "D01",
+      "optional": false
+    },
+    {
+      "from": "D06",
+      "to": "E01",
+      "optional": false
+    },
+    {
+      "from": "E03",
+      "to": "F01",
+      "optional": false
+    },
+    {
+      "from": "E05",
+      "to": "F01",
+      "optional": false
+    },
+    {
+      "from": "F06",
+      "to": "G01",
+      "optional": false
+    },
+    {
+      "from": "G04",
+      "to": "H01",
+      "optional": false
+    },
+    {
+      "from": "B03",
+      "to": "C03",
+      "optional": true
+    },
+    {
+      "from": "C02",
+      "to": "E04",
+      "optional": true
+    },
+    {
+      "from": "D03",
+      "to": "F02",
+      "optional": true
+    },
+    {
+      "from": "E02",
+      "to": "G02",
+      "optional": true
+    },
+    {
+      "from": "F03",
+      "to": "H04",
+      "optional": true
+    }
+  ]
+}

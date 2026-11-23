@@ -1,0 +1,850 @@
+.campaign-shell {
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse at 36% 20%, #16313f55, transparent 65%), #08121d;
+  color: #e9f1f2;
+  overflow: hidden;
+  position: relative;
+  font-family: "Inter Variable", sans-serif;
+}
+.campaign-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 42px;
+  border-bottom: 1px solid #c2e5ee14;
+}
+.campaign-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: left;
+}
+.campaign-brand small {
+  display: block;
+  font: 9px monospace;
+  letter-spacing: 2px;
+  margin-top: 6px;
+  color: #91a9b4;
+}
+.brand-glyph {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  border: 1px solid #d5edf65c;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #edfaff25, #b8dfed08);
+  font-size: 28px;
+}
+.campaign-header nav {
+  display: flex;
+  gap: 8px;
+}
+.campaign-header nav button {
+  padding: 10px 16px;
+  border-radius: 22px;
+  color: #adc2cc;
+}
+.campaign-header nav button[aria-current] {
+  background: #e3f4fa15;
+  color: white;
+}
+.saved-indicator {
+  font: 10px monospace;
+  letter-spacing: 1px;
+  color: #a2c7b7;
+}
+.hq-airport {
+  position: absolute;
+  inset: 90px -22% 0 20%;
+  opacity: 0.85;
+  pointer-events: auto;
+}
+.hq-copy {
+  position: relative;
+  z-index: 3;
+  padding: 85px 0 160px 5%;
+  max-width: 660px;
+  pointer-events: none;
+}
+.hq-copy button {
+  pointer-events: auto;
+}
+.hq-copy h1 {
+  font-size: clamp(42px, 5.2vw, 78px);
+  font-weight: 500;
+  letter-spacing: -4px;
+  line-height: 1.06;
+  margin: 25px 0;
+}
+.hq-copy h1 em {
+  font-style: normal;
+  color: #a9dce7;
+}
+.hq-copy > p {
+  max-width: 390px;
+  color: #a8bec8;
+  font-size: 18px;
+  line-height: 1.6;
+}
+.hq-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 30px;
+}
+.hq-progress {
+  display: flex;
+  gap: 40px;
+  margin-top: 50px;
+}
+.hq-progress > span {
+  font-size: 26px;
+  font-weight: 400;
+}
+.hq-progress small {
+  display: block;
+  font: 9px monospace;
+  letter-spacing: 1.5px;
+  color: #87a1ae;
+  margin-top: 10px;
+}
+.hq-footer {
+  position: relative;
+  z-index: 4;
+  margin: -100px 4% 35px;
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+.hq-footer > div {
+  flex: 1;
+}
+.hq-footer p {
+  font-size: 14px;
+  color: #b3c8d1;
+  margin: 8px 0 0;
+}
+.hq-footer > button {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.map-heading {
+  position: relative;
+  z-index: 3;
+  padding: 30px 4% 0;
+  pointer-events: none;
+}
+.map-heading h1 {
+  font-size: 32px;
+  font-weight: 450;
+  letter-spacing: -1.3px;
+  margin: 12px 0;
+}
+.map-heading p {
+  font-size: 14px;
+  color: #99b2bf;
+}
+.map-stage {
+  position: relative;
+  margin: -5px 350px 70px 0;
+  height: calc(100dvh - 280px);
+  min-height: 450px;
+  touch-action: none;
+  cursor: grab;
+  overflow: hidden;
+}
+.map-stage:active {
+  cursor: grabbing;
+}
+.campaign-graph {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.region-label {
+  fill: #9bb8c4;
+  font: 13px monospace;
+  letter-spacing: 2px;
+}
+.future-label {
+  fill: #577181;
+}
+.route-line {
+  fill: none;
+  stroke: #4d657b;
+  stroke-width: 2;
+  opacity: 0.35;
+}
+.route-line.lit {
+  stroke: #9bd6dd;
+  opacity: 0.85;
+  stroke-dasharray: 700;
+  animation: routeReveal 0.8s ease-out;
+}
+.slice-bridge {
+  fill: #6c95a6;
+  font: 12px monospace;
+}
+.map-node {
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    color 0.2s;
+  color: #95b1c0;
+}
+.map-node:hover,
+.map-node:focus-visible {
+  transform: translateY(-3px);
+  color: #effaff;
+}
+.node-orb {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid #b4e9ef55;
+  background: radial-gradient(circle at 35% 20%, #b9e3ee33, #182736cc);
+  box-shadow:
+    inset 0 1px 1px #e4f9ff55,
+    0 7px 20px #0005;
+  font: 14px monospace;
+}
+.map-node.available .node-orb,
+.map-node.in-progress .node-orb {
+  border-color: #b2ebed;
+  box-shadow:
+    0 0 25px #8bd3e52a,
+    inset 0 1px #fff5;
+}
+.map-node.selected .node-orb {
+  outline: 2px solid #b0dee8;
+  outline-offset: 6px;
+}
+.map-node.completed .node-orb {
+  color: #b6dfc7;
+  border-color: #80b59a;
+}
+.map-node.alternate .node-orb {
+  border-style: dashed;
+  color: #c3bddc;
+}
+.map-node.future .node-orb {
+  border-radius: 18px;
+  width: 38px;
+  height: 38px;
+  opacity: 0.4;
+}
+.map-node b {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+}
+.map-node small {
+  font: 10px monospace;
+  color: #7e99a8;
+}
+.map-dossier {
+  position: absolute;
+  z-index: 4;
+  right: 3%;
+  top: 230px;
+  width: 300px;
+  padding: 25px;
+  max-height: calc(100dvh - 330px);
+  overflow: auto;
+}
+.map-dossier h2 {
+  font-size: 26px;
+  letter-spacing: -1px;
+  font-weight: 500;
+  margin: 16px 0;
+}
+.map-dossier p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #adc1cc;
+}
+.dossier-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0;
+  border-block: 1px solid #a0c2d125;
+}
+.dossier-facts span {
+  font-size: 11px;
+  color: #92aab7;
+}
+.dossier-facts b {
+  display: block;
+  font-size: 14px;
+  color: #d4e4ea;
+  margin-top: 5px;
+  font-weight: 500;
+}
+.map-dossier .hint {
+  font-size: 11px;
+}
+.map-dossier .text-button {
+  margin-top: 12px;
+}
+.map-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 4%;
+  right: 4%;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.map-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.map-toolbar button {
+  min-width: 32px;
+  min-height: 32px;
+}
+.map-toolbar p {
+  font: 11px monospace;
+  color: #90a9b6;
+  margin: 0;
+}
+.route-history {
+  position: absolute;
+  z-index: 30;
+  right: 30px;
+  top: 95px;
+  width: 330px;
+  padding: 25px;
+  max-height: 75vh;
+  overflow: auto;
+}
+.route-history h2 {
+  font-weight: 500;
+}
+.route-history > button {
+  display: block;
+  padding: 14px 0;
+  text-align: left;
+  border-bottom: 1px solid #7ea7b52b;
+  width: 100%;
+}
+.route-history b {
+  font-size: 13px;
+  font-weight: 500;
+}
+.route-history span {
+  display: block;
+  font: 11px monospace;
+  color: #a3bcc6;
+  margin-top: 8px;
+}
+.route-history p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #a3bbc5;
+}
+.campaign-result {
+  position: relative;
+  margin: 65px auto;
+  max-width: 850px;
+  padding: 50px;
+  animation: caseArrive 0.6s ease both;
+}
+.campaign-result h1 {
+  font-size: 48px;
+  font-weight: 450;
+  letter-spacing: -2px;
+  margin: 18px 0;
+}
+.campaign-result p {
+  color: #a9c1cc;
+  line-height: 1.7;
+  font-size: 14px;
+}
+.result-numbers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 30px 0;
+  padding: 25px 0;
+  border-block: 1px solid #c0e4f025;
+}
+.result-numbers span {
+  font-size: 11px;
+  color: #94afbc;
+}
+.result-numbers b {
+  display: block;
+  font-size: 27px;
+  font-weight: 450;
+  color: #c9e9e8;
+  margin-bottom: 7px;
+}
+.result-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.campaign-result .new-routes {
+  color: #c0dbcf;
+}
+.campaign-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #020811cc;
+  z-index: 100;
+}
+.campaign-modal section {
+  max-width: 450px;
+  padding: 35px;
+}
+.campaign-modal button {
+  margin: 12px 10px 0 0;
+}
+.campaign-modal p {
+  line-height: 1.6;
+  color: #adbdc8;
+}
+.campaign-nav {
+  position: absolute;
+  z-index: 21;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  padding: 7px;
+  gap: 4px;
+  white-space: nowrap;
+}
+.campaign-nav button {
+  padding: 9px 13px;
+  font-size: 12px;
+  border-radius: 20px;
+}
+.campaign-nav button:hover {
+  background: #c3e9f31c;
+}
+.case-console {
+  position: absolute;
+  z-index: 20;
+  top: 205px;
+  right: 3.5%;
+  width: 330px;
+  max-height: calc(100dvh - 310px);
+  padding: 22px;
+  overflow: auto;
+  scrollbar-width: thin;
+  animation: caseArrive 0.45s ease both;
+}
+.case-console header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.case-console header button {
+  font-size: 24px;
+}
+.case-console h2 {
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: -0.7px;
+  margin: 10px 0 16px;
+}
+.case-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 13px;
+  background: #08141d88;
+}
+.case-tabs button {
+  flex: 1;
+  padding: 9px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #91abb9;
+}
+.case-tabs button[aria-pressed="true"] {
+  background: #c4e2eb20;
+  color: #f0faff;
+}
+.objectives {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  font: 10px monospace;
+  color: #a6bdc5;
+}
+.objectives span {
+  padding: 6px;
+  border: 1px solid #b4d4df26;
+  border-radius: 6px;
+}
+.met {
+  color: #b6dfc5 !important;
+}
+.case-console p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b1c3cf;
+}
+.case-console .hint {
+  font-size: 11px;
+  color: #8ba6b4;
+}
+.diagnostics {
+  display: grid;
+  gap: 7px;
+}
+.diagnostics button {
+  background: #c2e2ee0c;
+  border: 1px solid #b1d9e526;
+  text-align: left;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+}
+.evidence-readout {
+  font: 11px/1.8 monospace;
+  white-space: pre-wrap;
+  color: #b9d3dd;
+  background: #07121c77;
+  padding: 12px;
+  border-radius: 10px;
+  max-height: 170px;
+  overflow: auto;
+}
+.architecture-fields {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+.architecture-fields > label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #c0d3dc;
+  gap: 12px;
+}
+.architecture-fields input[type="number"],
+.architecture-fields select {
+  width: 62px;
+  background: #06121d;
+  color: #e1eef3;
+  padding: 7px;
+  border: 1px solid #9ac9d344;
+  border-radius: 6px;
+}
+.architecture-fields input[type="checkbox"] {
+  accent-color: #afd9dc;
+  width: 17px;
+  height: 17px;
+}
+.architecture-fields fieldset {
+  border: 1px solid #8ab5c22a;
+  border-radius: 8px;
+  display: flex;
+  gap: 25px;
+  padding: 9px;
+  font-size: 12px;
+}
+.architecture-fields legend {
+  font-size: 10px;
+  color: #9dbac7;
+}
+.architecture-fields fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.case-console footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font: 10px monospace;
+  color: #90acb9;
+}
+.case-console footer button {
+  padding: 8px 0;
+}
+.case-verdict {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #aed8e535;
+  font-size: 12px;
+}
+.case-verdict p {
+  font: 11px/1.6 monospace;
+}
+.campaign-notice {
+  position: fixed;
+  z-index: 80;
+  top: 110px;
+  left: 20%;
+  right: 20%;
+  padding: 20px;
+  font-size: 13px;
+}
+.campaign-notice button {
+  margin-left: 15px;
+}
+.classic-back {
+  position: fixed;
+  z-index: 90;
+  top: 78px;
+  right: 25px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #1e3443;
+}
+.game:has(.case-console) .inspector {
+  right: calc(3.5% + 350px);
+  width: 265px;
+  z-index: 22;
+}
+.game:has(.campaign-nav) .mission-heading {
+  top: 135px;
+}
+.game:has(.campaign-nav) .mission-heading h1 {
+  font-size: 23px;
+}
+.game:has(.campaign-nav) .telemetry {
+  top: 230px;
+}
+.game:has(.campaign-nav) .scene-tools {
+  display: none;
+}
+@keyframes caseArrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes routeReveal {
+  from {
+    stroke-dashoffset: 700;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .campaign-shell *,
+  .case-console {
+    animation: none !important;
+    transition: none !important;
+  }
+  .map-node:hover {
+    transform: none;
+  }
+}
+@media (max-width: 850px) {
+  .campaign-header {
+    padding: 18px;
+  }
+  .saved-indicator {
+    display: none;
+  }
+  .campaign-brand {
+    font-size: 14px;
+  }
+  .campaign-header nav {
+    gap: 0;
+  }
+  .campaign-header nav button {
+    font-size: 11px;
+    padding: 10px;
+  }
+  .hq-copy {
+    padding: 65px 25px 180px;
+  }
+  .hq-copy h1 {
+    letter-spacing: -2px;
+  }
+  .hq-airport {
+    inset: 200px -60% 0 0;
+    opacity: 0.4;
+  }
+  .hq-footer {
+    flex-wrap: wrap;
+    margin-top: -110px;
+  }
+  .hq-footer > div {
+    flex-basis: 100%;
+  }
+  .map-heading {
+    padding: 25px;
+  }
+  .map-heading h1 {
+    font-size: 25px;
+  }
+  .map-stage {
+    margin: 0;
+    height: 430px;
+    min-height: 0;
+  }
+  .campaign-graph {
+    min-width: 850px;
+    transform-origin: 0 0;
+    transform: scale(0.8);
+  }
+  .map-dossier {
+    position: relative;
+    inset: auto;
+    margin: 0 20px 100px;
+    width: auto;
+    max-height: none;
+  }
+  .map-toolbar {
+    position: fixed;
+    z-index: 30;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+  }
+  .map-toolbar p {
+    display: none;
+  }
+  .campaign-result {
+    margin: 30px 20px;
+    padding: 25px;
+  }
+  .campaign-result h1 {
+    font-size: 35px;
+  }
+  .result-numbers {
+    grid-template-columns: 1fr 1fr;
+  }
+  .case-console {
+    top: 200px;
+    right: 12px;
+    width: 290px;
+    max-height: calc(100dvh - 300px);
+  }
+  .campaign-nav {
+    top: 75px;
+    max-width: 96vw;
+  }
+  .campaign-nav button {
+    font-size: 10px;
+    padding: 8px;
+  }
+  .game:has(.case-console) .inspector {
+    right: 12px;
+    top: 195px;
+    width: 290px;
+    z-index: 30;
+  }
+  .game:has(.campaign-nav) .telemetry {
+    top: 160px;
+  }
+  .game:has(.campaign-nav) .mission-heading {
+    display: none;
+  }
+  .route-history {
+    right: 10px;
+    max-width: 90vw;
+  }
+  .campaign-notice {
+    left: 15px;
+    right: 15px;
+  }
+  .hq-progress {
+    gap: 25px;
+  }
+}
+/* Default map framing prioritizes readable, playable routes; later regions pan below. */
+.campaign-shell {
+  height: 100dvh;
+  overflow: auto;
+}
+.map-stage {
+  height: calc(100dvh - 335px);
+  min-height: 0;
+  margin-bottom: 95px;
+}
+.map-toolbar {
+  position: fixed;
+  z-index: 25;
+}
+.node-orb {
+  min-width: 54px;
+  min-height: 54px;
+}
+.map-node.future .node-orb {
+  min-width: 38px;
+  min-height: 38px;
+}
+.map-node b {
+  font-size: 14px;
+}
+.map-node small {
+  font-size: 12px;
+}
+@media (max-width: 850px) {
+  .map-stage {
+    height: 310px;
+    margin-bottom: 20px;
+  }
+  .map-dossier {
+    margin-bottom: 100px;
+  }
+  .campaign-graph {
+    width: 1000px;
+    min-width: 1000px;
+    height: 500px;
+    transform: scale(0.8);
+  }
+}
+.future-route {
+  stroke: #536b7e;
+  opacity: 0.17;
+  stroke-width: 1.3;
+}
+.game .case-console > header {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  position: static;
+  z-index: auto;
+}
+.game .case-console h2 {
+  margin: 12px 0 16px;
+}
+.case-console {
+  backdrop-filter: blur(24px) saturate(115%);
+  background: linear-gradient(145deg, #233b47db, #10222bd9);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .case-console {
+    backdrop-filter: none;
+    background: #172c38;
+  }
+}

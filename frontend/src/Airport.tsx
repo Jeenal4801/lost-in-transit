@@ -7,7 +7,8 @@ import {
   useLayoutEffect,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, RoundedBox, Html } from "@react-three/drei";
+import { OrbitControls, RoundedBox } from "@react-three/drei";
+import Html from "./SpatialLabel";
 import * as THREE from "three";
 import type { State, RequestRow } from "./types";
 const CYAN = "#8de5ed",
@@ -529,8 +530,28 @@ function Scene({
             <Block
               at={[0, 2.77, 1.16]}
               size={[2.7, 0.045, 0.04]}
-              color={state?.gates[i].failures ? CORAL : CYAN}
+              color={
+                !state?.config.scenario && state?.gates[i].failures
+                  ? CORAL
+                  : CYAN
+              }
             />
+            {!!state?.config.scenario &&
+              Array.from(
+                { length: state.config.capacity ?? 2 },
+                (_, worker) => (
+                  <Block
+                    key={`worker-${worker}`}
+                    at={[
+                      -1.1 + (worker % 4) * 0.7,
+                      3.1 + Math.floor(worker / 4) * 0.25,
+                      -0.5,
+                    ]}
+                    size={[0.45, 0.18, 0.65]}
+                    color={state.config.routing[i] ? "#91bfc9" : "#35434e"}
+                  />
+                ),
+              )}
             <Html position={[0, 3.55, 0]} center zIndexRange={[3, 0]}>
               <button
                 className="gate-label"
@@ -538,7 +559,13 @@ function Scene({
                 aria-label={`Inspect gate ${"ABC"[i]}`}
               >
                 <b>{"ABC"[i]}</b>
-                <span>GATE / 0{i + 1}</span>
+                <span>
+                  {state?.config.scenario
+                    ? state.config.routing[i]
+                      ? `${state.config.capacity} WORKERS`
+                      : "ROUTE CLOSED"
+                    : `GATE / 0${i + 1}`}
+                </span>
               </button>
             </Html>
           </group>
@@ -575,6 +602,13 @@ function Scene({
 }
 export default function Airport(props: Parameters<typeof Scene>[0]) {
   const [failed, setFailed] = useState(false);
+  const cleanupContext = useRef<(() => void) | null>(null);
+  useLayoutEffect(
+    () => () => {
+      cleanupContext.current?.();
+    },
+    [],
+  );
   return (
     <div
       className={`airport-canvas ${props.landing ? "landing-canvas" : ""}`}
@@ -593,11 +627,11 @@ export default function Airport(props: Parameters<typeof Scene>[0]) {
           camera={{ position: [17, 16, 21], zoom: 35, near: 0.1, far: 200 }}
           gl={{ antialias: true, powerPreference: "high-performance" }}
           onCreated={({ gl }) => {
-            gl.domElement.addEventListener(
-              "webglcontextlost",
-              () => setFailed(true),
-              { once: true },
-            );
+            const canvas = gl.domElement;
+            const lost = () => setFailed(true);
+            canvas.addEventListener("webglcontextlost", lost, { once: true });
+            cleanupContext.current = () =>
+              canvas.removeEventListener("webglcontextlost", lost);
           }}
         >
           <Scene {...props} />
