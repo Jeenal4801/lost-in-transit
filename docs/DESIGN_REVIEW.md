@@ -46,3 +46,15 @@ Six external reference captures and their source mappings are in DESIGN_REFERENC
 This is a first playable mission, not the entire master vision. Additional missions, persistent runs, two simultaneous 3D comparison views, connection-edge dragging, draggable panels, cancellation, scroll storytelling and audio remain unimplemented. Queued requests have bounded queues but no end-to-end deadline; retries use per-attempt connection timeouts. Circuit opening is implemented, but half-open probes are not. Quality uses a capped pixel ratio and batched geometry, not measured adaptive frame-rate control. Cross-device 60 FPS and screen-reader usability have not been formally audited. The mobile interface is functional but deliberately uses compact typography.
 
 The Search Footprint implementation and its tests were not modified.
+
+## Public browser runtime and release
+
+- Preserved the Python engine and all nine backend tests. Added a TypeScript discrete-event runtime behind the same UI; no duplicate airport or hardcoded outcomes.
+- Five Python-generated conformance scenarios compare every frame, request trace, gate state and metric. A sixth test exercises repair, baseline comparison, pause, single event stepping, replay isolation, mutation guards and restart.
+- First entry opens a dismissible tutorial with the missing-27 premise and explicit inspect/repair/verify instructions.
+- Moved verification beside the repair action so shorter viewports do not hide the next essential step below telemetry. Added a reduced-transparency fallback to the glass material.
+- Production build uses relative URLs and a separate browser runtime; local FastAPI builds still use WebSockets. Public builds have no API or localhost dependency.
+- Published original sources under MIT. Third-party study screenshots remain local and ignored; runtime dependency notices accompany the build.
+- GitHub Actions verifies both engines before publishing to Pages. Public URL: https://jeenal4801.github.io/lost-in-transit/
+- Live public browser verification completed: tutorial → 73/100 initial arrivals and 27 timeouts → REQ-003 trace → restore Gate C → verification batch → 100/100 with previous-batch comparison. Pause/resume, replay seek/play, return to live, restart and page refresh passed. No console warnings/errors were captured.
+- Saved deployed screenshots: `design/captures/07-public-failure.png` and `08-public-recovery.png`. The full local Python app was also run through 73-to-100 recovery in the browser.

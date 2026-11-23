@@ -4,6 +4,8 @@
 
 An interactive distributed-systems mystery in an original miniature 3D airport. Suitcases are HTTP requests; conveyors route them through services. Diagnose the missing 27, repair the infrastructure and recover all 100 requests.
 
+**[Play in your browser](https://jeenal4801.github.io/lost-in-transit/)** · [Source](https://github.com/Jeenal4801/lost-in-transit)
+
 ## Play the first case
 
 Enter the airport and accept the short mission tutorial. Watch the incident, inspect a terminal or open **Departures** to trace a failed request. Restore service or change routing, then **Send verification batch**. The engine computes every outcome; there are multiple valid repairs.
