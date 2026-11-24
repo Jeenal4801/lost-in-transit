@@ -219,14 +219,14 @@ export function evaluateEnding(outcomes: Outcome[]) {
   const reliability = arrived / total,
     integrity = correct / Math.max(1, arrived),
     expense = f.reduce((s, o) => s + o.cost, 0) / 3;
-  if (reliability >= 0.9 && integrity < 0.98) return "silent";
+  if (reliability >= 0.99 && integrity < 0.98) return "silent";
   if (
     reliability < 0.8 &&
     f.filter((o) => o.metrics.transport_failures > o.metrics.created * 0.2)
       .length >= 2
   )
     return "domino";
-  if (reliability < 0.99) return "fast";
+  if (reliability < 0.99) return f.every(o=>o.metrics.p95<=6500) ? "fast" : "domino";
   if (expense > 42) return "golden";
   if (
     outcomes.filter((o) => !o.final && o.severe).length >= 2 &&

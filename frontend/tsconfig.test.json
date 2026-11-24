@@ -13,6 +13,7 @@
     "src/types.ts",
     "src/campaign.ts",
     "src/director.ts",
-    "src/persistence.ts"
+    "src/persistence.ts",
+    "src/cloudSync.ts"
   ]
 }

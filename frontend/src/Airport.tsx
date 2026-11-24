@@ -403,6 +403,7 @@ function Scene({
   const controls = useRef<any>(null),
     world = useRef<THREE.Group>(null),
     hero = useRef<THREE.Group>(null),
+    heroInitial = useRef(landing ? 1 : .001),
     zoomTarget = useRef<number | null>(null);
   const { camera, size } = useThree();
   useEffect(() => {
@@ -574,7 +575,7 @@ function Scene({
           <Traffic state={state} reduced={reduced} onRequest={onRequest} />
         )}
       </group>
-      <group ref={hero}>
+      <group ref={hero} scale={heroInitial.current}>
         <HeroBag reduced={reduced || !landing} />
       </group>
       <mesh

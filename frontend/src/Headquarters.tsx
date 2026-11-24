@@ -21,6 +21,7 @@ import {
   type Vault,
 } from "./persistence";
 import * as cloud from "./cloud";
+import { syncCheckpoint } from "./cloudSync";
 import type { User } from "firebase/auth";
 import "./campaign.css";
 import "./headquarters.css";
@@ -129,19 +130,11 @@ export default function Headquarters() {
     if (!sync || !user) return;
     let cancelled = false;
     const timer = setTimeout(() => {
-      cloud
-        .upload(run, cloudRevision)
-        .then((rev) => {
-          if (!cancelled) setCloudRevision(rev);
-        })
-        .catch((e) => {
-          if (!cancelled) {
-            setSync(false);
-            setError(
-              `Cloud sync paused: ${e.message}. Your local save is safe.`,
-            );
-          }
-        });
+      void syncCheckpoint(run,cloudRevision,cloud.upload).then(result=>{
+        if(cancelled)return;
+        if(result.state==='synced')setCloudRevision(result.revision);
+        else{setSync(false);setError(`${result.message} Your local save is safe.`);}
+      });
     }, 2000);
     return () => {
       cancelled = true;
