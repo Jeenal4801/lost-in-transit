@@ -29,9 +29,10 @@ class Airport:
         # A recorded traffic fixture, not an outcome fixture: 27 visits to gate C.
         self.manifest = [0, 1, 2] * 27 + [0, 1] * 9 + [0]
         scenario = self.config.get('scenario', {})
-        for i, gate in enumerate(self.manifest):
+        for i in range(scenario.get("count", 100)):
+            gate = self.manifest[i % len(self.manifest)]
             if scenario.get('hotspot'):
-                gate = 0 if (i * 17 + scenario.get('seed', 0)) % 10 < 8 else 1 + i % 2
+                gate = scenario.get("affected",0) if (i * 17 + scenario.get('seed', 0)) % 10 < 8 else (i % 3 if 'affected' in scenario else 1 + i % 2)
             when = i * scenario.get('interval', .12)
             if scenario.get('burst'):
                 when = (i // 20) * .45 + (i % 20) * .006
@@ -97,7 +98,11 @@ class Airport:
         elif kind == 'queue':
             scenario = self.config.get('scenario', {})
             transient = scenario.get('transient') == gate and r['attempt'] == 0 and (rid * 17 + scenario.get('seed', 0)) % 5 == 0
-            if not self.config['online'][gate] or transient:
+            outage = 'dependency' in scenario and scenario.get('outage_start',0) <= self.time < scenario.get('outage_end',999)
+            cascade = outage and (gate == scenario['dependency'] or not self.config.get('isolate'))
+            if cascade:
+                self.emit('DEPENDENCY_UNAVAILABLE', r, gate=scenario['dependency'])
+            if not self.config['online'][gate] or transient or cascade:
                 r.update(status='waiting', stage_at=self.time)
                 self.emit('CONNECTION_PENDING', r, gate=gate)
                 self.schedule(self.time + 2, 'timeout', rid, gate)
@@ -116,6 +121,9 @@ class Airport:
                     self.emit('HEADER_REJECTED', r, gate=gate)
                     self.finish(r, 'http_error', 421)
                 else:
+                    if self.config.get('scenario',{}).get('corruption') == gate:
+                        r['correct'] = bool(self.config.get('validate_payload'))
+                        self.emit('PAYLOAD_RECONCILED' if r['correct'] else 'PAYLOAD_MISMATCH', r, gate=gate)
                     self.finish(r, 'succeeded', 200)
             else:
                 self.schedule(self.time + 2, 'timeout', rid, gate)
@@ -152,7 +160,7 @@ class Airport:
         rows = list(self.requests.values())
         latencies = sorted((r['ended'] - r['created']) * 1000 for r in rows if 'ended' in r)
         percentile = lambda p: round(latencies[min(len(latencies) - 1, math.ceil(len(latencies) * p) - 1)]) if latencies else 0
-        return {'created': len(rows), 'succeeded': sum(r['status'] == 'succeeded' for r in rows),
+        return {**({'correct':sum(r['status']=='succeeded' and r.get('correct',True) for r in rows)} if 'corruption' in self.config.get('scenario',{}) else {}), 'created': len(rows), 'succeeded': sum(r['status'] == 'succeeded' for r in rows),
                 'http_errors': sum(r['status'] == 'http_error' for r in rows),
                 'transport_failures': sum(r['status'] == 'timed_out' for r in rows),
                 'active': sum(r['status'] not in TERMINAL for r in rows),
@@ -196,6 +204,14 @@ class Airport:
             scenario = value.get('scenario', {})
             if not isinstance(scenario, dict) or not isinstance(scenario.get('interval', .12), (int,float)) or not .001 <= scenario.get('interval', .12) <= 1:
                 raise ValueError('Invalid workload interval')
+            if type(scenario.get('count',100)) is not int or not 40 <= scenario.get('count',100) <= 160:
+                raise ValueError('Invalid workload count')
+            for k in ('affected','corruption','dependency'):
+                if k in scenario and (type(scenario[k]) is not int or scenario[k] not in range(3)):
+                    raise ValueError('Invalid workload gate')
+            for k in ('outage_start','outage_end'):
+                if k in scenario and (not isinstance(scenario[k],(int,float)) or not 0 <= scenario[k] <= 60):
+                    raise ValueError('Invalid outage window')
             service = scenario.get('service', [.6]*3)
             if not isinstance(service,list) or len(service)!=3 or any(not isinstance(v,(int,float)) or not .01 <= v <= 10 for v in service):
                 raise ValueError('Invalid service durations')

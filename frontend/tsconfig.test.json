@@ -11,6 +11,8 @@
   "include": [
     "src/simulation.ts",
     "src/types.ts",
-    "src/campaign.ts"
+    "src/campaign.ts",
+    "src/director.ts",
+    "src/persistence.ts"
   ]
 }

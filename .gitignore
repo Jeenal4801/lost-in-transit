@@ -20,3 +20,7 @@ htmlcov/
 # Third-party screenshots are local study material, not licensed for redistribution.
 design/references/*.png
 frontend/tests/campaign-parity.json
+
+frontend/tests/procedural-parity.json
+firebase-tests/node_modules/
+*-debug.log

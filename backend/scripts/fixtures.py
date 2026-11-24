@@ -51,3 +51,16 @@ for m in content['missions']:
   campaign.append({'id':m['id'],'label':label,'config':config,'hashes':hashes,'metrics':a.metrics()})
 (out.parent/'campaign-parity.json').write_text(json.dumps(campaign,separators=(',',':')))
 print(f'Generated {len(campaign)} campaign conformance runs')
+
+procedural=[]
+for seed in [0,27,4294967295]:
+ for count in [80,120]:
+  for repaired in [False,True]:
+   config={**content['base_architecture'],'online':[True]*3,'capacity':6,'queue_limit':24,'retries':1,'balance':True,'accelerated':True,'validate_payload':repaired,'isolate':repaired,
+           'scenario':dict(seed=seed,count=count,affected=seed%3,hotspot=True,corruption=(seed+1)%3,dependency=(seed+2)%3,outage_start=1.2,outage_end=2.2,interval=.04)}
+   a=Airport(config);a.command('play');hashes=[]
+   while a.heap:
+    a.tick();hashes.append(hashlib.sha256(json.dumps(canonical(a.view()),sort_keys=True,separators=(',',':')).encode()).hexdigest())
+   procedural.append(dict(id=str(seed),label=f'{count}/{repaired}',config=config,hashes=hashes,metrics=a.metrics()))
+(out.parent/'procedural-parity.json').write_text(json.dumps(procedural,separators=(',',':')))
+print(f'Generated {len(procedural)} procedural parity workloads')

@@ -6,7 +6,15 @@ export type Config = State["config"] & {
   balance?: boolean;
   accelerated?: boolean;
   normalize_headers?: boolean;
+  validate_payload?: boolean;
+  isolate?: boolean;
   scenario?: {
+    count?: number;
+    affected?: number;
+    corruption?: number;
+    dependency?: number;
+    outage_start?: number;
+    outage_end?: number;
     interval?: number;
     service?: number[];
     seed?: number;
@@ -55,9 +63,17 @@ export class Airport {
       0,
     ];
     const scenario = this.config.scenario ?? {};
-    manifest.forEach((g, i) => {
+    Array.from(
+      { length: scenario.count ?? 100 },
+      (_, i) => manifest[i % manifest.length],
+    ).forEach((g, i) => {
       if (scenario.hotspot)
-        g = (i * 17 + (scenario.seed ?? 0)) % 10 < 8 ? 0 : 1 + (i % 2);
+        g =
+          (i * 17 + (scenario.seed ?? 0)) % 10 < 8
+            ? (scenario.affected ?? 0)
+            : scenario.affected !== undefined
+              ? i % 3
+              : 1 + (i % 2);
       const when = scenario.burst
         ? Math.floor(i / 20) * 0.45 + (i % 20) * 0.006
         : i * (scenario.interval ?? 0.12);
@@ -162,7 +178,15 @@ export class Airport {
         scenario.transient === g &&
         r.attempt === 0 &&
         (id * 17 + (scenario.seed ?? 0)) % 5 === 0;
-      if (!this.config.online[g] || transient) {
+      const outage =
+        scenario.dependency !== undefined &&
+        this.time >= (scenario.outage_start ?? 0) &&
+        this.time < (scenario.outage_end ?? 999);
+      const cascade =
+        outage && (g === scenario.dependency || !this.config.isolate);
+      if (cascade)
+        this.emit("DEPENDENCY_UNAVAILABLE", r, { gate: scenario.dependency });
+      if (!this.config.online[g] || transient || cascade) {
         Object.assign(r, { status: "waiting", stage_at: this.time });
         this.emit("CONNECTION_PENDING", r, { gate: g });
         this.schedule(this.time + 2, "timeout", id, g);
@@ -181,7 +205,17 @@ export class Airport {
         ) {
           this.emit("HEADER_REJECTED", r, { gate: g });
           this.finish(r, "http_error", 421);
-        } else this.finish(r, "succeeded", 200);
+        } else {
+          if (this.config.scenario?.corruption === g) {
+            r.correct = !!this.config.validate_payload;
+            this.emit(
+              r.correct ? "PAYLOAD_RECONCILED" : "PAYLOAD_MISMATCH",
+              r,
+              { gate: g },
+            );
+          }
+          this.finish(r, "succeeded", 200);
+        }
       } else {
         this.schedule(this.time + 2, "timeout", id, g);
         Object.assign(r, { status: "waiting", stage_at: this.time });
@@ -239,6 +273,13 @@ export class Airport {
           )
         : 0;
     return {
+      ...(this.config.scenario?.corruption !== undefined
+        ? {
+            correct: rows.filter(
+              (r) => r.status === "succeeded" && r.correct !== false,
+            ).length,
+          }
+        : {}),
       created: rows.length,
       succeeded: count("succeeded"),
       http_errors: count("http_error"),
@@ -328,6 +369,28 @@ export class Airport {
         )
       )
         throw Error("Invalid workload interval");
+      if (
+        !Number.isInteger(scenario.count ?? 100) ||
+        (scenario.count ?? 100) < 40 ||
+        (scenario.count ?? 100) > 160
+      )
+        throw Error("Invalid workload count");
+      for (const k of ["affected", "corruption", "dependency"] as const)
+        if (
+          scenario[k] !== undefined &&
+          (!Number.isInteger(scenario[k]) ||
+            scenario[k]! < 0 ||
+            scenario[k]! > 2)
+        )
+          throw Error("Invalid workload gate");
+      for (const k of ["outage_start", "outage_end"] as const)
+        if (
+          scenario[k] !== undefined &&
+          (!Number.isFinite(scenario[k]) ||
+            scenario[k]! < 0 ||
+            scenario[k]! > 60)
+        )
+          throw Error("Invalid outage window");
       const service = scenario.service ?? [0.6, 0.6, 0.6];
       if (
         !Array.isArray(service) ||

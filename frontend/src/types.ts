@@ -1,4 +1,5 @@
 export type RequestRow = {
+  correct?: boolean;
   n: number;
   id: string;
   status: string;
@@ -21,6 +22,7 @@ export type EventRow = {
   status?: string;
 };
 export type Metrics = {
+  correct?: number;
   created: number;
   succeeded: number;
   http_errors: number;
@@ -43,8 +45,8 @@ export type State = {
   metrics: Metrics;
   config: {
     scenario?: unknown;
-    capacity?:number;
-    queue_limit?:number;
+    capacity?: number;
+    queue_limit?: number;
     online: boolean[];
     routing: boolean[];
     retries: number;

@@ -14,9 +14,9 @@ import {
   switchBranch,
   cost,
 } from "../.test-build/frontend/src/campaign.js";
-const data = JSON.parse(
+const data = [...JSON.parse(
   fs.readFileSync(new URL("./campaign-parity.json", import.meta.url)),
-);
+),...JSON.parse(fs.readFileSync(new URL("./procedural-parity.json", import.meta.url)))];
 const canonical = (x) =>
   Array.isArray(x)
     ? x.map(canonical)

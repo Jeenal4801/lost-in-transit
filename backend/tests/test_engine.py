@@ -154,3 +154,24 @@ def test_configure_rejects_malformed_workloads():
         with pytest.raises(ValueError):
             a.command('configure', {**original, **patch})
         assert a.config == original
+
+
+def test_procedural_counts_payload_integrity_and_dependency_isolation():
+    config=dict(online=[True]*3,routing=[True]*3,capacity=8,queue_limit=24,retries=1,breaker=False,balance=True,accelerated=True,
+                scenario=dict(count=80,interval=.04,corruption=1,dependency=2,outage_start=1.2,outage_end=2.2,seed=27))
+    broken=finish(Airport(config))
+    restored=finish(Airport({**config,'validate_payload':True,'isolate':True}))
+    assert len(restored.requests)==80
+    assert restored.metrics()['correct']==restored.metrics()['succeeded']==80
+    assert broken.metrics()['correct'] < broken.metrics()['succeeded']
+    assert broken.metrics()['retries'] > restored.metrics()['retries']
+    assert any(e['kind']=='DEPENDENCY_UNAVAILABLE' for e in broken.events)
+
+
+def test_procedural_boundaries_rejected_without_mutating_live_state():
+    import pytest
+    a=Airport()
+    original=copy.deepcopy(a.config)
+    for scenario in [dict(count=0),dict(count=161),dict(count=80.5),dict(dependency=3),dict(corruption=-1),dict(outage_start=-1)]:
+        with pytest.raises(ValueError):a.command('configure',{**original,'scenario':scenario})
+        assert a.config==original
