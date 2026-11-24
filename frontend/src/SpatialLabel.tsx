@@ -21,6 +21,7 @@ export default function SpatialLabel({
   const dom = useRef<HTMLDivElement | null>(null);
   const root = useRef<Root | null>(null);
   const point = useRef(new Vector3());
+  const scale = useRef(new Vector3());
   const { gl } = useThree();
   useLayoutEffect(() => {
     const element = document.createElement("div");
@@ -47,7 +48,9 @@ export default function SpatialLabel({
     if (!group.current || !dom.current) return;
     group.current.getWorldPosition(point.current).project(camera);
     dom.current.style.transform = `translate3d(${((point.current.x + 1) * size.width) / 2}px,${((1 - point.current.y) * size.height) / 2}px,0)`;
-    dom.current.style.display = point.current.z > 1 ? "none" : "";
+    group.current.getWorldScale(scale.current);
+    dom.current.style.display =
+      point.current.z > 1 || scale.current.length() < 0.05 ? "none" : "";
   });
   return <group ref={group} position={position} />;
 }

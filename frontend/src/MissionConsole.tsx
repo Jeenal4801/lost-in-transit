@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Config } from "./simulation";
 import type { State } from "./types";
 import { cost, passed, type Mission, type Save } from "./campaign";
@@ -9,12 +9,20 @@ export default function MissionConsole({
   save,
   onComplete,
   onMap,
+  evaluate,
+  price = cost,
+  finalEvaluation = false,
+  capabilities,
 }: {
   state: State;
   command: (a: string, v?: unknown) => Promise<void>;
   mission: Mission;
   save: Save;
-  onComplete: (s: State, e: string[], runs: number) => void;
+  onComplete: (s: State, e: string[], runs: number, severe?: boolean) => void;
+  evaluate?: (s: State, e: string[]) => boolean;
+  price?: (c: Config) => number;
+  finalEvaluation?: boolean;
+  capabilities?: string[];
   onMap: () => void;
 }) {
   const [draft, setDraft] = useState<Config | null>(null),
@@ -25,7 +33,20 @@ export default function MissionConsole({
     [view, setView] = useState<"brief" | "diagnose" | "engineer">("brief");
   const c = draft ?? (state.config as Config),
     goal = mission.completion_conditions!,
-    ready = passed(mission, state, evidence);
+    ready = evaluate
+      ? evaluate(state, evidence)
+      : passed(mission, state, evidence);
+  const total = mission.workload?.count ?? 100;
+  const [severe, setSevere] = useState(false);
+  useEffect(() => {
+    if (
+      state.done &&
+      state.replay === null &&
+      state.metrics.succeeded < total * 0.8 &&
+      runs > 0
+    )
+      setSevere(true);
+  }, [state.done, runs]);
   const patch = (p: Partial<Config>) =>
     setDraft({ ...structuredClone(c), ...p });
   function collect(id: string) {
@@ -33,6 +54,10 @@ export default function MissionConsole({
       setSample(
         "Run the workload first; evidence is collected from actual requests.",
       );
+      return;
+    }
+    if (id === "trace" && !state.requests.some((r) => r.ended !== undefined)) {
+      setSample("Let a journey finish before reconstructing its trace.");
       return;
     }
     setEvidence((v) => [...new Set([...v, id])]);
@@ -48,6 +73,7 @@ export default function MissionConsole({
       );
     if (id === "trace") {
       const r =
+        state.requests.find((r) => r.correct === false) ??
         state.requests.find(
           (r) => r.status === "http_error" || r.status === "timed_out",
         ) ??
@@ -98,7 +124,7 @@ export default function MissionConsole({
             onMap();
           }}
         >
-          ← Map / HQ
+          ← Headquarters
         </button>
         <button
           onClick={() =>
@@ -157,6 +183,9 @@ export default function MissionConsole({
               <button
                 key={v}
                 aria-pressed={view === v}
+                disabled={
+                  !!evaluate && v === "engineer" && evidence.length === 0
+                }
                 onClick={() => setView(v)}
               >
                 {v === "brief"
@@ -168,14 +197,14 @@ export default function MissionConsole({
             ))}
           </div>
           <div className="objectives">
-            <span className={state.metrics.succeeded === 100 ? "met" : ""}>
-              {state.metrics.succeeded}/100 arrivals
+            <span className={state.metrics.succeeded === total ? "met" : ""}>
+              {state.metrics.succeeded}/{total} arrivals
             </span>
             <span className={state.metrics.p95 <= goal.p95 ? "met" : ""}>
               p95 ≤ {goal.p95} ms
             </span>
             <span>
-              {cost(c)}/{goal.max_cost} credits
+              {price(c)}/{goal.max_cost} credits
             </span>
           </div>
           {view === "brief" && (
@@ -216,6 +245,7 @@ export default function MissionConsole({
               <button
                 className="outline-button full"
                 onClick={() => setView("engineer")}
+                disabled={!!evaluate && evidence.length === 0}
               >
                 Develop an intervention →
               </button>
@@ -225,7 +255,7 @@ export default function MissionConsole({
             <>
               <p className="hint">
                 Changes below apply to the next test. Current operating cost:{" "}
-                {cost(c)} credits.
+                {price(c)} credits.
               </p>
               <div className="architecture-fields">
                 <label>
@@ -282,24 +312,35 @@ export default function MissionConsole({
                     "accelerated",
                     "normalize_headers",
                     "breaker",
+                    "validate_payload",
+                    "isolate",
                   ] as const
-                ).map((k, i) => (
-                  <label key={k}>
-                    {
-                      [
-                        "Least-loaded routing (+2)",
-                        "Accelerated workers (+8)",
-                        "Normalize headers (+2)",
-                        "Circuit breaker",
-                      ][i]
-                    }
-                    <input
-                      type="checkbox"
-                      checked={!!c[k]}
-                      onChange={(e) => patch({ [k]: e.target.checked })}
-                    />
-                  </label>
-                ))}
+                )
+                  .filter(
+                    (k) =>
+                      !capabilities ||
+                      !["validate_payload", "isolate"].includes(k) ||
+                      capabilities.includes(k),
+                  )
+                  .map((k) => (
+                    <label key={k}>
+                      {
+                        {
+                          balance: "Least-loaded routing (+2)",
+                          accelerated: "Accelerated workers (+8)",
+                          normalize_headers: "Normalize headers (+2)",
+                          breaker: "Circuit breaker",
+                          validate_payload: "Reconcile payloads (+2)",
+                          isolate: "Isolate dependencies (+2)",
+                        }[k]
+                      }
+                      <input
+                        type="checkbox"
+                        checked={!!c[k]}
+                        onChange={(e) => patch({ [k]: e.target.checked })}
+                      />
+                    </label>
+                  ))}
                 <fieldset>
                   <legend>Enabled routes</legend>
                   {["A", "B", "C"].map((g, i) => (
@@ -344,7 +385,7 @@ export default function MissionConsole({
               <button
                 className="primary full"
                 onClick={run}
-                disabled={state.running || cost(c) > goal.max_cost}
+                disabled={state.running || price(c) > goal.max_cost}
               >
                 Verify architecture
               </button>
@@ -354,20 +395,24 @@ export default function MissionConsole({
             <div className={`case-verdict ${ready ? "met" : ""}`} role="status">
               <b>
                 {ready
-                  ? "Objectives met. Case ready to close."
+                  ? finalEvaluation
+                    ? "Evaluation recorded. Redesign or continue."
+                    : "Objectives met. Case ready to close."
                   : "Test complete. Objectives remain."}
               </b>
               <p>
-                {state.metrics.succeeded}/100 · p95 {state.metrics.p95} ms ·{" "}
-                {cost(state.config as Config)} credits · {evidence.length}{" "}
+                {state.metrics.succeeded}/{total} · p95 {state.metrics.p95} ms ·{" "}
+                {price(state.config as Config)} credits · {evidence.length}{" "}
                 evidence probes
               </p>
               {ready ? (
                 <button
                   className="primary full"
-                  onClick={() => onComplete(state, evidence, runs)}
+                  onClick={() => onComplete(state, evidence, runs, severe)}
                 >
-                  Close case & record architecture
+                  {finalEvaluation
+                    ? "Record evaluation & continue"
+                    : "Close case & record architecture"}
                 </button>
               ) : (
                 <button

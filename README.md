@@ -8,9 +8,11 @@ An interactive distributed-systems mystery in an original miniature 3D airport. 
 
 ## Play the campaign
 
-Start at HQ, investigate a case, collect trace or distribution evidence, then stage an architecture and verify it under load. Close a case to save its measured outcomes and unlock the next routes. The map is pannable/zoomable, with exclusive specializations, paid remedial branch switching and two reachable endings. Completed progress survives refresh; interrupted tests restart. New Campaign clears progress, while Replay preserves it.
+Headquarters shows your current incident, evolving infrastructure and discovered history. Future routes and ending conditions stay hidden. Collect evidence, stage a repair, and verify it under load. Each campaign has a persistent seed: affected services, timing, traffic and incident order vary within validated scenario families.
 
-**Playable:** A01–A04, B01–B03 and S01 (the separate slice convergence challenge). The other 35 canonical missions are labeled Future and cannot launch. See `docs/CAMPAIGN_IMPLEMENTATION.md` for precise guards, budgets and limitations.
+A run covers eight technical concepts and a three-stage mixed workload evaluation. Six new measured endings join Precision and Headroom. New Campaign archives the old run; Saved campaigns supports resume, import/export and explicit removal. Completed checkpoints survive refresh; interrupted experiments restart. Existing v2 architecture and history migrate into the new journal.
+
+Google login and Firestore synchronization are optional and **not configured on the public deployment yet**. Guest mode is fully local. See [Firebase setup](docs/FIREBASE_SETUP.md) for Spark setup, security rules, quotas and the authenticated acceptance checks still required. See [implementation scope](docs/PROCEDURAL_IMPLEMENTATION.md) for the simulator's bounds and [the current specification](docs/PROCEDURAL_CAMPAIGN_SPEC.md).
 
 ## Original sandbox
 
@@ -74,7 +76,7 @@ The repository's `pages.yml` workflow runs Python tests, generates conformance f
 
 ## Design and licensing
 
-See `docs/PRODUCT_VISION.md`, `docs/DESIGN_REFERENCES.md` and `docs/DESIGN_REVIEW.md`. The vision document describes longer-term ambitions, not a list of shipped features. The campaign specifications in `docs/CAMPAIGN_GRAPH.md`, `docs/VISUAL_DIRECTION.md` and `docs/CODEX_PROMPT.md` are the current source of truth. Source code and original procedural assets are MIT licensed. See `docs/ASSETS.md` and bundled `THIRD_PARTY_NOTICES.txt` for dependency/font licensing. Third-party reference screenshots are local study material and excluded from Git and deployment.
+See `docs/PRODUCT_VISION.md`, `docs/DESIGN_REFERENCES.md` and `docs/DESIGN_REVIEW.md`. The vision document describes longer-term ambitions, not a list of shipped features. The campaign specifications in `docs/CAMPAIGN_GRAPH.md`, `docs/VISUAL_DIRECTION.md` and `docs/CODEX_PROMPT.md` describe the earlier authored campaign. Source code and original procedural assets are MIT licensed. See `docs/ASSETS.md` and bundled `THIRD_PARTY_NOTICES.txt` for dependency/font licensing. Third-party reference screenshots are local study material and excluded from Git and deployment.
 
 ## Current limits
 

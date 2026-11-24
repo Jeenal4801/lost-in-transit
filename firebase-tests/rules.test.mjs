@@ -1,0 +1,23 @@
+import {test, before, after} from 'node:test';
+import {readFileSync} from 'node:fs';
+import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
+import {doc,setDoc,getDoc,getDocs,collection,query,limit,deleteDoc} from 'firebase/firestore';
+let env;
+before(async()=>{env=await initializeTestEnvironment({projectId:'demo-lost-in-transit',firestore:{rules:readFileSync('../firestore.rules','utf8')}});});
+after(async()=>env?.cleanup());
+test('Ownership, document boundaries, revision checks, list limits and guest isolation',async()=>{
+ const alice=env.authenticatedContext('alice').firestore(),bob=env.authenticatedContext('bob').firestore(),guest=env.unauthenticatedContext().firestore();
+ const path='players/alice/campaigns/run1';const value={owner:'alice',id:'run1',schema:3,revision:1,updatedAt:1,payload:'{}'};
+ await assertSucceeds(setDoc(doc(alice,path),value));
+ await assertSucceeds(getDoc(doc(alice,path)));
+ await assertFails(getDoc(doc(bob,path)));await assertFails(getDoc(doc(guest,path)));
+ await assertFails(setDoc(doc(bob,path),{...value,revision:2}));
+ await assertFails(setDoc(doc(alice,path),{...value,owner:'bob',revision:2}));
+ await assertFails(setDoc(doc(alice,path),{...value,revision:2,extra:true}));
+ await assertFails(setDoc(doc(alice,path),{...value,revision:2,payload:'x'.repeat(120001)}));
+ await assertFails(setDoc(doc(alice,path),value));
+ await assertSucceeds(setDoc(doc(alice,path),{...value,revision:2}));
+ await assertFails(getDocs(collection(alice,'players/alice/campaigns')));
+ await assertSucceeds(getDocs(query(collection(alice,'players/alice/campaigns'),limit(20))));
+ await assertFails(deleteDoc(doc(bob,path)));await assertSucceeds(deleteDoc(doc(alice,path)));
+});

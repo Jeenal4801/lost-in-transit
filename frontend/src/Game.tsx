@@ -425,7 +425,11 @@ export default function App({
             <div className="main-metric">
               <b>
                 {m?.succeeded ?? 0}
-                <small>/100</small>
+                <small>
+                  /
+                  {(state?.config.scenario as { count?: number } | undefined)
+                    ?.count ?? 100}
+                </small>
               </b>
               <span>successful arrivals</span>
             </div>
@@ -622,10 +626,23 @@ export default function App({
                   <div className="comparison">
                     <span>
                       Previous batch
-                      <strong>{state.baseline.succeeded}/100</strong>
+                      <strong>
+                        {state.baseline.succeeded}/
+                        {(
+                          state?.config.scenario as
+                            { count?: number } | undefined
+                        )?.count ?? 100}
+                      </strong>
                     </span>
                     <span>
-                      This batch<strong>{m?.succeeded}/100</strong>
+                      This batch
+                      <strong>
+                        {m?.succeeded}/
+                        {(
+                          state?.config.scenario as
+                            { count?: number } | undefined
+                        )?.count ?? 100}
+                      </strong>
                     </span>
                   </div>
                 )}

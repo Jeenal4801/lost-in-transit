@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) { return request.auth != null && request.auth.uid == uid; }
+    match /players/{uid}/campaigns/{campaignId} {
+      function valid() {
+        let d = request.resource.data;
+        return d.keys().hasAll(['owner','id','schema','revision','updatedAt','payload'])
+          && d.keys().hasOnly(['owner','id','schema','revision','updatedAt','payload'])
+          && d.owner == uid && d.id == campaignId && d.id is string && d.id.size() <= 80
+          && d.schema == 3 && d.revision is int && d.revision > 0
+          && d.updatedAt is int && d.updatedAt > 0
+          && d.payload is string && d.payload.size() > 0 && d.payload.size() <= 120000;
+      }
+      allow get: if owner(uid);
+      allow list: if owner(uid) && request.query.limit != null && request.query.limit <= 20;
+      allow create: if owner(uid) && valid() && request.resource.data.revision == 1;
+      allow update: if owner(uid) && valid() && request.resource.data.revision == resource.data.revision + 1;
+      allow delete: if owner(uid);
+    }
+  }
+}
