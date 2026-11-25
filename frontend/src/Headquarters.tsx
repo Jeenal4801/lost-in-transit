@@ -47,7 +47,7 @@ export default function Headquarters() {
     ),
     [vault, setVault] = useState<Vault>(initial.vault),
     [view, setView] = useState<
-      "hq" | "game" | "archive" | "history" | "account" | "ending" | "classic"
+      "hq" | "game" | "archive" | "history" | "account" | "ending" | "classic" | "help"
     >("hq");
   const [user, setUser] = useState<User | null>(null),
     [remote, setRemote] = useState<Awaited<ReturnType<typeof cloud.listCloud>>>(
@@ -157,6 +157,12 @@ export default function Headquarters() {
     }
   };
   const update = (r: Run) => setVault((v) => checkpoint(v, r));
+  const startCampaign = (r: Run = run) => {
+    update({ ...r, revision: r.revision + 1, updatedAt: Date.now() });
+    setView(r.ending ? "ending" : "game");
+  };
+  const hasProgress = run.revision > 0 || run.outcomes.length > 0 || !!run.legacy;
+  const beginCampaign = () => hasProgress ? setConfirm("new") : startCampaign();
   const exportSave = () => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(
@@ -175,10 +181,7 @@ export default function Headquarters() {
   if (view === "classic")
     return (
       <>
-        <Game resetOriginal />
-        <button className="classic-back" onClick={() => setView("hq")}>
-          ← Headquarters
-        </button>
+        <Game resetOriginal onMap={() => setView("hq")} />
       </>
     );
   if (view === "game")
@@ -220,9 +223,9 @@ export default function Headquarters() {
           </span>
         </button>
         <nav>
-          <button onClick={() => setView("hq")}>Headquarters</button>
+          <button onClick={() => setView("hq")} aria-current={view === "hq" ? "page" : undefined}>{view === "hq" ? "Headquarters" : "Return to Headquarters"}</button>
           <button onClick={() => setView("history")}>History</button>
-          <button onClick={() => setView("archive")}>Saved campaigns</button>
+          <button onClick={() => setView("archive")}>Saved Campaigns</button>
           <button onClick={() => setView("account")}>
             {user ? "Account" : "Guest"}
           </button>
@@ -255,36 +258,20 @@ export default function Headquarters() {
             </SceneBoundary>
           </div>
           <section className="hq-copy">
-            <span className="eyebrow">YOUR AIRPORT / LIVE OPERATIONS</span>
-            <h1>
-              The world
-              <br />
-              is <em>unfolding.</em>
-            </h1>
-            <p>
-              {run.ending
-                ? "The departure inspection is complete. Your decisions have left their mark."
-                : run.current.short_hook}
-            </p>
-            <div className="hq-actions">
-              <button
-                className="primary"
-                onClick={() => setView(run.ending ? "ending" : "game")}
-              >
-                {run.ending
-                  ? "View retrospective"
-                  : run.outcomes.length
-                    ? "Continue campaign"
-                    : "Play as Guest"}{" "}
-                ↗
+            <span className="eyebrow">HEADQUARTERS · PROCEDURAL CAMPAIGN</span>
+            <h1>Your airport.<br /><em>Your campaign.</em></h1>
+            <p>Investigate incidents. Rebuild the system. Carry your decisions into the next challenge.</p>
+            <div className="hq-actions campaign-entry" aria-label="Campaign actions">
+              <button className="primary" onClick={beginCampaign}>New Campaign</button>
+              <button className="outline-button" disabled={!hasProgress} onClick={() => startCampaign()}>
+                Continue Campaign
               </button>
-              <button
-                className="outline-button"
-                onClick={() => setView("account")}
-              >
-                {user ? "Manage cloud saves" : "Continue with Google"}
-              </button>
+              <button className="outline-button" onClick={() => setView("classic")}>Practice Sandbox</button>
+              <button className="outline-button" onClick={() => setView("archive")}>Saved Campaigns</button>
+              <button className="text-button" onClick={() => setView("help")}>How to Play</button>
             </div>
+            <p className="entry-note">{hasProgress ? "Continue resumes your saved incident. New Campaign keeps the previous campaign in Saved Campaigns." : "Start with New Campaign. Progress is saved on this device."}</p>
+            {!cloud.configured && <p className="cloud-unavailable">Google sign-in unavailable · cloud saves not configured. Guest campaigns work normally.</p>}
             <div className="hq-progress">
               <span>
                 {run.outcomes.length}
@@ -311,7 +298,7 @@ export default function Headquarters() {
             <p>
               {run.ending
                 ? "Start another campaign to explore a different airport."
-                : "Observe the traffic. Follow the evidence."}
+                : "Open your campaign, run the workload, then collect evidence to plan a repair."}
             </p>
             <small>
               Discovered services ·{" "}
@@ -326,12 +313,23 @@ export default function Headquarters() {
               Your infrastructure carries forward. The next incident is not yet
               known.
             </p>
-            <button onClick={() => setView("classic")}>
-              Original sandbox ↗
-            </button>
-            <button onClick={() => setConfirm("new")}>New campaign</button>
+            <span className="practice-note">Practice Sandbox is a separate training exercise: The Missing 27.</span>
           </footer>
         </>
+      )}
+      {view === "help" && (
+        <section className="hq-page account-panel glass">
+          <h1>How to Play</h1>
+          <ol className="how-to-play">
+            <li><b>Start a campaign.</b> New Campaign opens your first incident. Continue Campaign resumes your saved incident.</li>
+            <li><b>Observe.</b> Run the incident workload. Watch arrivals, latency and queues.</li>
+            <li><b>Investigate.</b> Use Evidence to trace requests or inspect traffic. Observations unlock Architecture.</li>
+            <li><b>Experiment.</b> Change infrastructure and test again. Meet the displayed objectives, then record the result.</li>
+            <li><b>Return to Headquarters.</b> Completed incidents and architecture are saved. Unfinished experiments restart when reopened.</li>
+          </ol>
+          <p>Practice Sandbox contains The Missing 27, an optional training case. It does not advance or replace your campaign.</p>
+          <button className="primary" onClick={() => startCampaign()}>Play Campaign</button>
+        </section>
       )}
       {view === "history" && (
         <section className="hq-page">
@@ -449,12 +447,7 @@ export default function Headquarters() {
           )}
           {!user ? (
             <>
-              <button
-                disabled={!cloud.configured || busy}
-                onClick={() => void act(cloud.login)}
-              >
-                Continue with Google
-              </button>
+              {cloud.configured ? <button disabled={busy} onClick={() => void act(cloud.login)}>Continue with Google</button> : <p className="cloud-unavailable">Google sign-in unavailable until Firebase is configured.</p>}
               <button onClick={() => setView("hq")}>Play as Guest</button>
             </>
           ) : (
@@ -594,7 +587,9 @@ export default function Headquarters() {
                       throw Error(
                         "Archive full. Remove an older campaign first.",
                       );
-                    open(newRun());
+                    setSync(false);
+                    setCloudRevision(null);
+                    startCampaign(newRun());
                   } else if (confirm === "clear") {
                     localStorage.removeItem(vaultKey);
                     setBlocked(false);

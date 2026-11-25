@@ -124,7 +124,7 @@ export default function MissionConsole({
             onMap();
           }}
         >
-          ← Headquarters
+          Return to Headquarters
         </button>
         <button
           onClick={() =>

@@ -288,20 +288,20 @@ export default function App({
             setLanding(true);
             void command("pause");
           }}
-          aria-label="Lost in Transit home"
+          aria-label={onMap ? "Return to Headquarters" : "Lost in Transit home"}
         >
           <span className="brand-icon">
             <Luggage size={22} />
           </span>
           <span>
-            Lost in Transit
-            <span className="identity-sub">THE INTERNET IS AN AIRPORT</span>
+            {onMap ? "Return to Headquarters" : "Lost in Transit"}
+            <span className="identity-sub">{missionTitle ? "CAMPAIGN" : resetOriginal ? "PRACTICE SANDBOX · THE MISSING 27" : "THE INTERNET IS AN AIRPORT"}</span>
           </span>
         </button>
         <div className="header-right">
           {!landing && (
             <span className="mission-chip">
-              {missionTitle ? "CAMPAIGN" : "CASE 001"}{" "}
+              {missionTitle ? "CAMPAIGN" : "PRACTICE SANDBOX"}{" "}
               <span>{missionTitle ?? "The missing 27"}</span>
             </span>
           )}
@@ -335,7 +335,7 @@ export default function App({
         <>
           <section className="hero">
             <p className="eyebrow">
-              <span /> A DISTRIBUTED SYSTEMS MYSTERY
+              <span /> PRACTICE SANDBOX · OPTIONAL TRAINING
             </p>
             <h1>
               Every request
@@ -355,10 +355,10 @@ export default function App({
             <div className="hero-actions">
               <button className="primary" onClick={enter} disabled={!connected}>
                 <Play size={15} fill="currentColor" />
-                Enter the airport
+                Start Practice Sandbox
               </button>
               <button className="text-button" onClick={() => setBrief(true)}>
-                Your first mission
+                About this practice case
               </button>
             </div>
             <span className="hero-note">
@@ -374,7 +374,7 @@ export default function App({
             <div className="case-preview">
               <span className="case-number">001</span>
               <div>
-                <span className="eyebrow">YOUR FIRST CASE</span>
+                <span className="eyebrow">PRACTICE CASE</span>
                 <h2>The case of the missing 27</h2>
               </div>
             </div>
@@ -724,8 +724,8 @@ export default function App({
               </button>
             )}
             <button
-              aria-label="Reset original incident"
-              title="Reset original incident"
+              aria-label={missionTitle ? "Restart campaign incident" : "Reset practice sandbox"}
+              title={missionTitle ? "Restart campaign incident" : "Reset practice sandbox"}
               onClick={() => command("reset")}
             >
               <RotateCcw size={17} />

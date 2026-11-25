@@ -214,3 +214,26 @@
 }
 @media(min-width:851px){.headquarters .dispatch{bottom:210px}}
 @media(min-width:851px) and (max-height:800px){.headquarters .dispatch{bottom:170px}}
+
+/* Campaign entry is explicit and remains readable at all viewport sizes. */
+.headquarters .campaign-entry { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); max-width:470px; gap:12px; }
+.headquarters .campaign-entry button { min-height:48px; padding:12px 16px; font-size:15px; }
+.headquarters .campaign-entry button:disabled { opacity:.45; cursor:not-allowed; }
+.headquarters .entry-note, .headquarters .cloud-unavailable { font-size:14px; line-height:1.55; max-width:465px; margin:14px 0; }
+.headquarters .cloud-unavailable { color:#a7bdc8; }
+.headquarters .hq-copy { padding-top:45px; padding-bottom:140px; }
+.headquarters .hq-copy h1 { font-size:clamp(42px,4.5vw,64px); }
+.headquarters .hq-progress { margin-top:22px; }
+.headquarters .hq-footer { margin-top:-90px; }
+.practice-note { color:#a7bdc8; font-size:14px; max-width:360px; line-height:1.5; }
+.how-to-play { padding-left:24px; }
+.how-to-play li { padding:10px 0; line-height:1.6; color:#c2d4df; }
+.game > header .identity, .intro > header .identity { background:#203c4c; border:1px solid #b8e6ee55; border-radius:16px; padding:10px 16px; }
+@media(max-width:850px) {
+ .headquarters .hq-copy { padding:25px 22px 20px; max-width:600px; }
+ .headquarters .hq-footer { margin:20px; }
+ .headquarters .campaign-entry { max-width:none; }
+ .game > header .identity, .intro > header .identity { font-size:13px; padding:8px; }
+ .game > header .identity .brand-icon, .intro > header .identity .brand-icon { display:none; }
+ .game > header .identity-sub, .intro > header .identity-sub { font-size:8px; letter-spacing:.6px; }
+}
