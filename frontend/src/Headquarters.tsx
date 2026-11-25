@@ -10,6 +10,7 @@ import {
   finishRun,
   operatingCost,
   endingNames,
+  unlockedCapabilities,
   type Run,
 } from "./director";
 import {
@@ -196,15 +197,7 @@ export default function Headquarters() {
             onMap={() => setView("hq")}
             price={operatingCost}
             finalEvaluation={run.current.final}
-            capabilities={
-              run.outcomes.length >= 6 || run.current.final
-                ? ["validate_payload", "isolate"]
-                : run.current.family === "correctness"
-                  ? ["validate_payload"]
-                  : run.current.family === "dependency"
-                    ? ["isolate"]
-                    : []
-            }
+            capabilities={unlockedCapabilities(run)}
             evaluate={(state, e) => verified(run.current, state, e)}
             onComplete={(state, e, n, severe) => {
               const next = finishRun(run, state, e, n, !!severe);

@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {newRun,configuration,nextIncident,finishRun,feasible,simulate,verified,evaluateEnding,incident} from '../.test-build/frontend/src/director.js';
+import {newRun,configuration,nextIncident,finishRun,feasible,simulate,verified,evaluateEnding,incident,unlockedCapabilities} from '../.test-build/frontend/src/director.js';
 import {loadVault,saveVault,validateRun,checkpoint,vaultKey} from '../.test-build/frontend/src/persistence.js';
 const probes=['trace','distribution','queue'];
 test('Seeds reproduce incidents; variation includes gate, sequence, timing and count',()=>{
@@ -28,3 +28,5 @@ test('Bounded scenario parameters reject invalid saves; boundary workloads are s
   const r=newRun(seed);r.current=incident(seed,family,0,r.architecture);const s=simulate(feasible(r));assert.ok(verified(r.current,s,probes));
  }
 });
+
+test('Discovered engineering capabilities persist when incident families change',()=>{const r=newRun(27);r.outcomes=[{family:'correctness'},{family:'dependency'}];r.current=incident(27,'surge',2,r.architecture);assert.deepEqual(unlockedCapabilities(r),['validate_payload','isolate']);});

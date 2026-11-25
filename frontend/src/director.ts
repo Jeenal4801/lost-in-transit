@@ -300,3 +300,7 @@ export function feasible(r: Run): Config {
     isolate: true,
   };
 }
+
+export function unlockedCapabilities(r:Run):string[]{
+ return (['validate_payload','isolate'] as const).filter(k=>r.current.final||r.architecture[k]||r.current.family===(k==='validate_payload'?'correctness':'dependency')||r.outcomes.some(o=>o.family===(k==='validate_payload'?'correctness':'dependency')));
+}
